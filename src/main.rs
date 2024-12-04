@@ -20,7 +20,10 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "eframe template",
         native_options,
-        Box::new(|cc| Box::new(egui_hex06::HexApp::new(cc))),
+        Box::new(|cc| {
+            let app: Box<dyn eframe::App> = Box::new(egui_hex06::HexApp::new(cc));
+            Ok(app)
+        }),
     )
 }
 
@@ -37,7 +40,7 @@ fn main() {
             .start(
                 "the_canvas_id", // hardcode it
                 web_options,
-                Box::new(|cc| Box::new(egui_hex06::HexApp::new(cc))),
+                Box::new(|cc| Ok(Box::new(egui_hex06::HexApp::new(cc)))),
             )
             .await;
         let loading_text = web_sys::window()

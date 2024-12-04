@@ -13,7 +13,7 @@ pub fn top_bar(hex_app: &mut HexApp, _ctx: &egui::Context, ui: &mut egui::Ui) {
         ui.add(
             egui::DragValue::new(&mut hex_app.zoom)
                 .speed(0.01)
-                .clamp_range(HexApp::MIN_ZOOM..=HexApp::MAX_ZOOM),
+                .range(HexApp::MIN_ZOOM..=HexApp::MAX_ZOOM),
         );
         ui.separator();
 

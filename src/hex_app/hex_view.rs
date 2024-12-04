@@ -14,7 +14,7 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     // Hopefully temporary code:
     // make the hex_view side panel automatically set its own width.
     ui.horizontal(|ui| {
-        ui.set_visible(false);
+        ui.set_invisible();
 
         let mut dummy_string = "00000000: ".to_string();
         (0..hex_app.hex_view_columns).for_each(|_| dummy_string += "00 ");
