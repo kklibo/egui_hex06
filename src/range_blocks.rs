@@ -240,7 +240,7 @@ impl<'a> RangeBlockSum<'a> {
     }
 }
 
-impl<'a> Cacheable<u64> for RangeBlockSum<'a> {
+impl Cacheable<u64> for RangeBlockSum<'_> {
     fn value(&self, index: u64, count: u64) -> u64 {
         self.block_sum(index, count)
     }
@@ -283,7 +283,7 @@ impl<'a> RangeBlockDiff<'a> {
     }
 }
 
-impl<'a> Cacheable<Option<usize>> for RangeBlockDiff<'a> {
+impl Cacheable<Option<usize>> for RangeBlockDiff<'_> {
     fn value(&self, index: u64, count: u64) -> Option<usize> {
         self.block_diff(index, count)
     }
