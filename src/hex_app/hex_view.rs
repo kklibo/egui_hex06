@@ -24,6 +24,7 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
     if let Some(index) = hex_app.selected_index {
         ui.label(format!("selected index: 0x{:08X}", index));
+        ui.spacing_mut().item_spacing.y = -1.0;
 
         let data = match hex_app.active_file {
             WhichFile::File0 => &hex_app.pattern0,
@@ -59,12 +60,12 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     let mut display_text = String::new();
                     let mut offset = line_index;
 
-                    ui.horizontal_wrapped(|ui| {
+                    ui.horizontal(|ui| {
                         // Trick so we don't have to add spaces in the text below:
                         let width = ui.fonts(|f| {
                             f.glyph_width(&TextStyle::Monospace.resolve(ui.style()), ' ')
                         });
-                        ui.spacing_mut().item_spacing.x = width - 0.5;
+                        ui.spacing_mut().item_spacing.x = width - 0.25;
                         ui.label(
                             RichText::new(&address)
                                 //.color(Color32::RED)
@@ -103,8 +104,9 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         display_text += &format!("{:02X} ", data[offset]);
                         offset += 1;
                     }
-
-                    ui.monospace(address + &display_text);
+                    ui.horizontal(|ui| {
+                        ui.monospace(address + &display_text);
+                    });
                 }
             }
         }
