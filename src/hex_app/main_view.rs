@@ -209,7 +209,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if rendered_recursion_level < max_recursion_level {
             for (_index, _count, rect) in visible_range_blocks(rendered_recursion_level + 1) {
                 hex_app.rect_draw_count += 1;
-                painter.rect_stroke(rect, 10.0, Stroke::new(2.0, Color32::BLACK));
+                painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::BLACK));
             }
         }
 
@@ -248,7 +248,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 if index <= selected_index as u64 && (selected_index as u64) < index + count {
                     hex_app.selected_range_block = Some((index, count));
                     hex_app.rect_draw_count += 1;
-                    painter.rect_stroke(rect, 10.0, Stroke::new(2.0, Color32::WHITE));
+                    painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::WHITE));
                 }
             }
         }
@@ -259,7 +259,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
             ) {
                 hex_app.rect_draw_count += 1;
-                painter.rect_stroke(rect, 10.0, Stroke::new(2.0, Color32::GOLD));
+                painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
             }
         }
     }
