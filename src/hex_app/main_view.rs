@@ -5,7 +5,37 @@ use crate::range_blocks::{
     max_recursion_level, range_block_rect, Cacheable, CompleteLargestRangeBlockIterator,
     RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
 };
-use egui::{Align2, Color32, Context, FontId, Rect, Sense, Stroke, Ui, Vec2};
+use egui::{Align2, Color32, Context, FontId, Painter, Rect, Sense, Stroke, Ui, Vec2};
+
+fn draw_range_outer_edges(
+    index: u64,
+    count: u64,
+    painter: &Painter,
+    rect: Rect,
+    color: Color32,
+) {
+    painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, color));
+
+    painter.line_segment(
+        [rect.left_top(), rect.right_top()],
+        Stroke::new(2.0, Color32::LIGHT_GREEN),
+    );
+
+    painter.line_segment(
+        [rect.right_top(), rect.right_bottom()],
+        Stroke::new(2.0, Color32::LIGHT_BLUE),
+    );
+
+    painter.line_segment(
+        [rect.left_bottom(), rect.right_bottom()],
+        Stroke::new(2.0, Color32::LIGHT_RED),
+    );
+
+    painter.line_segment(
+        [rect.left_bottom(), rect.left_top()],
+        Stroke::new(2.0, Color32::LIGHT_YELLOW),
+    );
+}
 
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     hex_app.selected_range_block = None; // Reset selected range block (should this be done some other way?)
@@ -135,12 +165,14 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             if index + count > data_len {
                 // Final incomplete range block
                 if let Some(count) = data_len.checked_sub(index) {
-                    for (_index, _count, rect) in selection_range_blocks(index, count) {
+                    for (index, count, rect) in selection_range_blocks(index, count) {
                         hex_app.rect_draw_count += 1;
-                        painter.rect_stroke(
-                            rect.shrink(1.0),
-                            10.0,
-                            Stroke::new(2.0, Color32::DARK_RED),
+                        draw_range_outer_edges(
+                            index,
+                            count,
+                            &painter,
+                            rect,
+                            Color32::DARK_RED,
                         );
                     }
                 } else {
@@ -223,7 +255,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 );
             }
         }
-
+/*
         if rendered_recursion_level < max_recursion_level {
             for (_index, _count, rect) in visible_range_blocks(rendered_recursion_level + 1) {
                 hex_app.rect_draw_count += 1;
@@ -280,6 +312,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
             }
         }
+        */
     }
 
     if let Some(cursor_pos) = response.hover_pos() {
