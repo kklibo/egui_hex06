@@ -24,7 +24,7 @@ fn draw_range_outer_edges(
         Stroke::new(2.0, Color32::LIGHT_GREEN),
     );*/
 
-    // Draw right edge if this block is the end of the range or of a row
+    // Draw the right edge if this block is the end of the range or of a row.
     if rect_index + rect_count == range_index + range_count
         || 0 == (rect_index + rect_count) % (sub_block_sqrt * rect_count)
     {
@@ -34,12 +34,15 @@ fn draw_range_outer_edges(
         );
     }
 
-    /*
-    painter.line_segment(
-        [rect.left_bottom(), rect.right_bottom()],
-        Stroke::new(2.0, Color32::LIGHT_RED),
-    );
+    // Draw the bottom edge if this block plus one row is outside the range.
+    if rect_index + (sub_block_sqrt * rect_count) >= range_index + range_count {
+        painter.line_segment(
+            [rect.left_bottom(), rect.right_bottom()],
+            Stroke::new(2.0, Color32::LIGHT_RED),
+        );
+    }
 
+    /*
     painter.line_segment(
         [rect.left_bottom(), rect.left_top()],
         Stroke::new(2.0, Color32::LIGHT_YELLOW),
