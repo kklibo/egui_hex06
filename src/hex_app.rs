@@ -64,10 +64,11 @@ impl HexApp {
     pub const SUB_BLOCK_SQRT: u64 = 4;
 
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let len = 10_000_usize;
-        let mut data0 = random_pattern(len);
+        let len0 = 10_000_usize;
+        let mut data0 = random_pattern(len0);
         data0.extend(0..=u8::MAX);
-        let mut data1 = random_pattern(len);
+        let len1 = 12_000_usize;
+        let mut data1 = random_pattern(len1);
         data1.extend(0..=u8::MAX);
 
         Self {

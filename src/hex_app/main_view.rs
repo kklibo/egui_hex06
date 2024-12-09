@@ -132,6 +132,24 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
 
         for (index, count, rect) in visible_range_blocks(rendered_recursion_level) {
+            if index + count > data_len {
+                // Final incomplete range block
+                if let Some(count) = data_len.checked_sub(index) {
+                    for (_index, _count, rect) in selection_range_blocks(index, count) {
+                        hex_app.rect_draw_count += 1;
+                        painter.rect_stroke(
+                            rect.shrink(1.0),
+                            10.0,
+                            Stroke::new(2.0, Color32::DARK_RED),
+                        );
+                    }
+                } else {
+                    // This should be impossible.
+                    log::error!("index > data_len");
+                }
+                continue;
+            }
+
             let diff_bytes = if hex_app.color_mode == ColorMode::Diff {
                 if let Some(other_data) = other_data {
                     hex_app.diff_cache.get(index, count).unwrap_or_else(|| {
