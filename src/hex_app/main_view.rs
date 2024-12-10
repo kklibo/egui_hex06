@@ -317,7 +317,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             }
         }
-
+*/
         if let Some(selected_index) = hex_app.selected_index {
             for (_index, _count, rect) in selection_range_blocks(
                 selected_index as u64,
@@ -327,7 +327,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
             }
         }
-        */
+        /**/
     }
 
     if let Some(cursor_pos) = response.hover_pos() {
