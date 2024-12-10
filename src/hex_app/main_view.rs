@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashSet, VecDeque};
+use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
 
 use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
@@ -276,6 +276,30 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if let Some(selected_index) = hex_app.selected_index {
             let mut points = HashSet::new();
 
+            let mut perimeter_edges = HashMap::<(u64, u64), (u64, u64)>::new();
+            let mut removed_edges = HashMap::new();
+
+            let mut add_edge = |p0: (u64, u64), p1: (u64, u64)| {
+                if let Some(p2) = removed_edges.remove(&p1) {
+                    if p0 != p2 {
+                        //assert!(perimeter_edges.insert(p0, p2).is_none());
+                        perimeter_edges.insert(p0, p2);
+                    }
+                } else if let Some(p2) = perimeter_edges.remove(&p1) {
+                    if p0.0 == p2.0 || p0.1 == p2.1 {
+                        //assert!(perimeter_edges.insert(p0, p2).is_none());
+                        perimeter_edges.insert(p0, p2);
+                        assert!(removed_edges.insert(p1, p2).is_none());
+                    } else {
+                        assert!(perimeter_edges.insert(p0, p1).is_none());
+                        assert!(perimeter_edges.insert(p1, p2).is_none());
+                    }
+                } else {
+                    //assert!(perimeter_edges.insert(p0, p1).is_none());
+                    perimeter_edges.insert(p0, p1);
+                }
+            };
+
             let mut include_block = |index: u64, count: u64| {
                 let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
                 let (x_max, y_max) = get_cell_offset(index + count - 1, sub_block_sqrt);
@@ -296,6 +320,11 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         points.insert(vertex)
                     };
                 }
+
+                add_edge(vertices[0], vertices[1]);
+                add_edge(vertices[1], vertices[2]);
+                add_edge(vertices[2], vertices[3]);
+                add_edge(vertices[3], vertices[0]);
             };
 
             for (index, count, rect) in selection_range_blocks(
@@ -307,7 +336,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 hex_app.rect_draw_count += 1;
                 painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
             }
-
+            /*
             let mut line_vertices = VecDeque::new();
 
             for point in points {
@@ -329,6 +358,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         Stroke::new(2.0, Color32::BLUE),
                     );
                 }
+            }
+            */
+
+            for (p0, p1) in perimeter_edges.iter() {
+                let coord0 = Pos2::new(p0.0 as f32, p0.1 as f32) * hex_app.zoom;
+                let coord1 = Pos2::new(p1.0 as f32, p1.1 as f32) * hex_app.zoom;
+                let coord0 = coord0 + center.to_vec2();
+                let coord1 = coord1 + center.to_vec2();
+
+                painter.line_segment([coord0, coord1], Stroke::new(2.0, Color32::RED));
             }
         }
     }
