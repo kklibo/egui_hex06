@@ -277,7 +277,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             let mut points = HashSet::new();
 
             let mut perimeter_edges = HashMap::<(u64, u64), (u64, u64)>::new();
-            let mut removed_edges = HashMap::new();
+            let mut perimeter_edges_rev = HashMap::<(u64, u64), (u64, u64)>::new();
+            /*let mut removed_edges = HashMap::new();
 
             let mut add_edge = |p0: (u64, u64), p1: (u64, u64)| {
                 if let Some(p2) = removed_edges.remove(&p1) {
@@ -297,6 +298,38 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 } else {
                     //assert!(perimeter_edges.insert(p0, p1).is_none());
                     perimeter_edges.insert(p0, p1);
+                }
+            };*/
+
+            let mut add_edge = |p0: (u64, u64), p1: (u64, u64)| {
+                let mut p1 = p1;
+                while let Some(p2) = perimeter_edges.remove(&p1) {
+                    assert_eq!(Some(p1), perimeter_edges_rev.remove(&p2));
+                    if p0.0 == p2.0 || p0.1 == p2.1 {
+                        p1 = p2;
+                    } else {
+                        perimeter_edges.insert(p1, p2);
+                        perimeter_edges_rev.insert(p2, p1);
+                        break;
+                    }
+                }
+
+                let mut p0 = p0;
+                while let Some(pn1) = perimeter_edges_rev.remove(&p0) {
+                    assert_eq!(Some(p0), perimeter_edges.remove(&pn1));
+                    if p1.0 == pn1.0 || p1.1 == pn1.1 {
+                        p0 = pn1;
+                    } else {
+                        perimeter_edges.insert(pn1, p0);
+                        perimeter_edges_rev.insert(p0, pn1);
+                        break;
+                    }
+                }
+
+                if p0 != p1 {
+                    //assert!(perimeter_edges.insert(p0, p1).is_none());
+                    perimeter_edges.insert(p0, p1);
+                    perimeter_edges_rev.insert(p1, p0);
                 }
             };
 
@@ -362,6 +395,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             */
 
             for (p0, p1) in perimeter_edges.iter() {
+                log::info!("perimeter_edges.len: {}", perimeter_edges.len());
                 let coord0 = Pos2::new(p0.0 as f32, p0.1 as f32) * hex_app.zoom;
                 let coord1 = Pos2::new(p1.0 as f32, p1.1 as f32) * hex_app.zoom;
                 let coord0 = coord0 + center.to_vec2();
