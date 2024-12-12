@@ -310,11 +310,28 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 ) -> bool {
                     let mut combined = false;
                     while let Some(p2) = edges.remove(&p1) {
-                        assert_eq!(Some(p1), edges_reverse.remove(&p2));
+                        //assert_eq!(Some(p1), edges_reverse.remove(&p2));
+                        if Some(p1) != edges_reverse.remove(&p2) {
+                            log::debug!("p1:{p1:?}   p2:{p2:?}");
+                            log::debug!("{edges:?}");
+                            panic!();
+                        }
                         if p0.0 == p2.0 || p0.1 == p2.1 {
                             if p0 != p2 {
-                                assert!(edges.insert(p0, p2).is_none());
-                                assert!(edges_reverse.insert(p2, p0).is_none());
+                                //assert!(edges.insert(p0, p2).is_none());
+                                let v = edges.insert(p0, p2);
+                                if v.is_some() {
+                                    log::debug!("v: {v:?}   p0:{p0:?}   p2:{p2:?}");
+                                    log::debug!("{edges:?}");
+                                    panic!();
+                                }
+                                //assert_eq!(None, edges_reverse.insert(p2, p0));
+                                let v = edges_reverse.insert(p2, p0);
+                                if v.is_some() {
+                                    log::debug!("v: {v:?}   p0:{p0:?}   p2:{p2:?}");
+                                    log::debug!("{edges:?}");
+                                    panic!();
+                                }
                             }
                             combined = true;
                         } else {
@@ -341,8 +358,20 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     &mut perimeter_edges_rev,
                     &mut perimeter_edges,
                 ) {
-                    assert!(perimeter_edges.insert(p0, p1).is_none());
-                    assert!(perimeter_edges_rev.insert(p1, p0).is_none());
+                    //assert_eq!(None, perimeter_edges.insert(p0, p1));
+                    let v = perimeter_edges.insert(p0, p1);
+                    if !v.is_none() {
+                        log::debug!("v: {v:?}   p0:{p0:?}   p1:{p1:?}");
+                        log::debug!("{perimeter_edges:?}");
+                        panic!();
+                    }
+                    //assert_eq!(None, perimeter_edges_rev.insert(p1, p0));
+                    let v = perimeter_edges_rev.insert(p1, p0);
+                    if !v.is_none() {
+                        log::debug!("v: {v:?}   p0:{p0:?}   p1:{p1:?}");
+                        log::debug!("{perimeter_edges:?}");
+                        panic!();
+                    }
                 }
             };
 
