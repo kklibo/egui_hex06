@@ -301,39 +301,46 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             };*/
 
-            let mut add_edge = |mut p0: (u64, u64), mut p1: (u64, u64)| {
+            let mut add_edge = |p0: (u64, u64), p1: (u64, u64)| {
                 fn add_and_combine_with_collinear_neighbors(
                     p0: (u64, u64),
-                    p1: &mut (u64, u64),
+                    p1: (u64, u64),
                     edges: &mut HashMap<(u64, u64), (u64, u64)>,
                     edges_reverse: &mut HashMap<(u64, u64), (u64, u64)>,
-                ) {
+                ) -> bool {
+                    let mut combined = false;
                     while let Some(p2) = edges.remove(&p1) {
-                        assert_eq!(Some(*p1), edges_reverse.remove(&p2));
+                        assert_eq!(Some(p1), edges_reverse.remove(&p2));
                         if p0.0 == p2.0 || p0.1 == p2.1 {
-                            *p1 = p2;
+                            if p0 != p2 {
+                                assert!(edges.insert(p0, p2).is_none());
+                                assert!(edges_reverse.insert(p2, p0).is_none());
+                            }
+                            combined = true;
                         } else {
-                            edges.insert(*p1, p2);
-                            edges_reverse.insert(p2, *p1);
-                            break;
+                            //assert!(edges.insert(p0, p1).is_none());
+                            //assert!(edges_reverse.insert(p1, p0).is_none());
+                            edges.insert(p1, p2);
+                            edges_reverse.insert(p2, p1);
+                            return false;
                         }
                     }
+                    combined
                 }
 
-                add_and_combine_with_collinear_neighbors(
-                    p0,
-                    &mut p1,
-                    &mut perimeter_edges,
-                    &mut perimeter_edges_rev,
-                );
-                add_and_combine_with_collinear_neighbors(
-                    p1,
-                    &mut p0,
-                    &mut perimeter_edges_rev,
-                    &mut perimeter_edges,
-                );
+                assert_ne!(p0, p1);
 
-                if p0 != p1 {
+                if !add_and_combine_with_collinear_neighbors(
+                    p0,
+                    p1,
+                    &mut perimeter_edges,
+                    &mut perimeter_edges_rev,
+                ) && !add_and_combine_with_collinear_neighbors(
+                    p1,
+                    p0,
+                    &mut perimeter_edges_rev,
+                    &mut perimeter_edges,
+                ) {
                     assert!(perimeter_edges.insert(p0, p1).is_none());
                     assert!(perimeter_edges_rev.insert(p1, p0).is_none());
                 }
