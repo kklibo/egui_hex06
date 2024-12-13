@@ -286,13 +286,44 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             let mut next_edge_id: usize = 0;
             let mut edges = Vec::<Edge>::new();
 
-            let mut add_edge = |id: usize, next: usize, start: (u64, u64), end: (u64, u64)| {
-                edges.push(Edge {
-                    id,
-                    next,
-                    start,
-                    end,
-                });
+            let mut add_edge = |mut id: usize,
+                                mut next: usize,
+                                mut start: (u64, u64),
+                                mut end: (u64, u64),
+                                edges: &mut Vec<Edge>| {
+                let mut next_edges = Vec::new();
+
+                for edge in edges.clone() {
+                    if end == edge.start && (start.0 == edge.end.0 || start.1 == edge.end.1) {
+                        end = edge.end;
+                        next = edge.next;
+                    } else {
+                        next_edges.push(edge);
+                    }
+                }
+
+                let mut next_edges2 = Vec::new();
+
+                for edge in next_edges {
+                    if edge.end == start && (edge.start.0 == end.0 || edge.start.1 == end.1) {
+                        start = edge.start;
+                        id = edge.id;
+                    } else {
+                        next_edges2.push(edge);
+                    }
+                }
+
+                if start != end {
+                    next_edges2.push(Edge {
+                        id,
+                        next,
+                        start,
+                        end,
+                    });
+                }
+
+                edges.clear();
+                edges.append(&mut next_edges2);
             };
 
             let mut include_block = |index: u64, count: u64| {
@@ -317,10 +348,10 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
 
                 let id = next_edge_id;
-                add_edge(id + 0, id + 1, vertices[0], vertices[1]);
-                add_edge(id + 1, id + 2, vertices[1], vertices[2]);
-                add_edge(id + 2, id + 3, vertices[2], vertices[3]);
-                add_edge(id + 3, id + 0, vertices[3], vertices[0]);
+                add_edge(id + 0, id + 1, vertices[0], vertices[1], &mut edges);
+                add_edge(id + 1, id + 2, vertices[1], vertices[2], &mut edges);
+                add_edge(id + 2, id + 3, vertices[2], vertices[3], &mut edges);
+                add_edge(id + 3, id + 0, vertices[3], vertices[0], &mut edges);
                 next_edge_id += 4;
             };
 
