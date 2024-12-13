@@ -276,7 +276,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if let Some(selected_index) = hex_app.selected_index {
             let mut points = HashSet::new();
 
-            #[derive(Debug, PartialEq)]
+            #[derive(Debug, PartialEq, Clone, Copy)]
             struct Edge {
                 next: usize,
                 start: (u64, u64),
@@ -338,12 +338,26 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 painter.circle_filled(coord, 2.0, Color32::GREEN);
             }
 
-            let mut line_vertices = VecDeque::new();
-            if let Some(&first_edge) = edges.keys().next() {
-                let mut next_edge = first_edge;
+            let mut edges = edges.clone();
+
+            let first_edge = edges
+                .keys()
+                .next()
+                .copied()
+                .and_then(|id| edges.remove(&id));
+
+            if let Some(first_edge) = first_edge {
+                let mut next_id = first_edge.next;
+
+                let mut line_vertices = VecDeque::new();
+                let point = first_edge.start;
+                let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
+                let coord = coord + center.to_vec2();
+                line_vertices.push_back(coord);
 
                 loop {
-                    let point = edges.get(&next_edge).unwrap().start;
+                    let next_edge = edges.remove(&next_id).unwrap_or(first_edge);
+                    let point = next_edge.start;
                     let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
                     let coord = coord + center.to_vec2();
 
@@ -358,8 +372,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         );
                     }
 
-                    next_edge = edges.get(&next_edge).unwrap().next;
-                    if next_edge == first_edge {
+                    next_id = next_edge.next;
+                    if next_id == first_edge.next {
                         break;
                     }
                 }
