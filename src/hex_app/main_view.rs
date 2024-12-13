@@ -301,7 +301,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             };*/
 
-            let mut add_edge = |p0: (u64, u64), p1: (u64, u64)| {
+            /*let mut add_edge = |p0: (u64, u64), p1: (u64, u64)| {
                 fn add_and_combine_with_collinear_neighbors(
                     p0: (u64, u64),
                     p1: (u64, u64),
@@ -373,6 +373,64 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         panic!();
                     }
                 }
+            };*/
+
+            let mut add_edge = |p1: (u64, u64), p2: (u64, u64)| {
+                assert_ne!(p1, p2);
+                let mut to_add1 = p1;
+                let mut to_add2 = p2;
+
+                loop {
+                    let p2 = to_add2;
+                    let p3 = perimeter_edges.remove(&p2);
+
+                    if let Some(p3) = p3 {
+                        assert_eq!(Some(p2), perimeter_edges_rev.remove(&p3));
+                        if p1.0 == p3.0 || p1.1 == p3.1 {
+                            to_add2 = p3;
+                        } else {
+                            assert_eq!(None, perimeter_edges.insert(p2, p3));
+                            assert_eq!(None, perimeter_edges_rev.insert(p3, p2));
+                        }
+                    }
+
+                    let p1 = to_add1;
+                    let p0 = perimeter_edges_rev.remove(&p1);
+
+                    if let Some(p0) = p0 {
+                        assert_eq!(Some(p1), perimeter_edges.remove(&p0));
+                        if p2.0 == p0.0 || p2.1 == p0.1 {
+                            to_add1 = p0;
+                        } else {
+                            assert_eq!(None, perimeter_edges_rev.insert(p1, p0));
+                            assert_eq!(None, perimeter_edges.insert(p0, p1));
+                        }
+                    }
+
+                    if perimeter_edges.contains_key(&to_add1)
+                        || perimeter_edges_rev.contains_key(&to_add2)
+                    {
+                        continue;
+                    }
+                    break;
+                }
+
+                if to_add1 != to_add2 {
+                    //assert_eq!(None, perimeter_edges.insert(to_add1, to_add2));
+                    let v = perimeter_edges.insert(to_add1, to_add2);
+                    if let Some(v) = v {
+                        log::debug!("v: {v:?}   to_add1:{to_add1:?}   to_add2:{to_add2:?}");
+                        log::debug!("{perimeter_edges:?}");
+                        //panic!();
+                    }
+                    //assert_eq!(None, perimeter_edges_rev.insert(to_add2, to_add1));
+                    let v = perimeter_edges_rev.insert(to_add2, to_add1);
+                    if let Some(v) = v {
+                        log::debug!("v: {v:?}   to_add1:{to_add1:?}   to_add2:{to_add2:?}");
+                        log::debug!("{perimeter_edges:?}");
+                        //panic!();
+                    }
+                }
             };
 
             let mut include_block = |index: u64, count: u64| {
@@ -404,7 +462,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
             for (index, count, rect) in selection_range_blocks(
                 selected_index as u64,
-                u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
+                //u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
+                8,
             ) {
                 include_block(index, count);
 
