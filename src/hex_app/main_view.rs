@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
 
 use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
@@ -276,6 +276,18 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if let Some(selected_index) = hex_app.selected_index {
             let mut points = HashSet::new();
 
+            #[derive(Debug, PartialEq)]
+            struct Edge {
+                next: usize,
+                start: (u64, u64),
+            };
+            let mut next_edge_id: usize = 0;
+            let mut edges = HashMap::<usize, Edge>::new();
+
+            let mut add_edge = |id: usize, next: usize, start: (u64, u64)| {
+                assert_eq!(None, edges.insert(id, Edge { next, start }));
+            };
+
             let mut include_block = |index: u64, count: u64| {
                 let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
                 let (x_max, y_max) = get_cell_offset(index + count - 1, sub_block_sqrt);
@@ -296,6 +308,13 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         points.insert(vertex)
                     };
                 }
+
+                let id = next_edge_id;
+                add_edge(id + 0, id + 1, vertices[0]);
+                add_edge(id + 1, id + 2, vertices[1]);
+                add_edge(id + 2, id + 3, vertices[2]);
+                add_edge(id + 3, id + 0, vertices[3]);
+                next_edge_id += 4;
             };
 
             for (index, count, rect) in selection_range_blocks(
@@ -317,6 +336,33 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 //let rect = rect.translate(center.to_vec2());
 
                 painter.circle_filled(coord, 2.0, Color32::GREEN);
+            }
+
+            let mut line_vertices = VecDeque::new();
+            if let Some(&first_edge) = edges.keys().next() {
+                let mut next_edge = first_edge;
+
+                loop {
+                    let point = edges.get(&next_edge).unwrap().start;
+                    let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
+                    let coord = coord + center.to_vec2();
+
+                    line_vertices.push_back(coord);
+                    if line_vertices.len() > 2 {
+                        line_vertices.pop_front();
+                    }
+                    if line_vertices.len() == 2 {
+                        painter.line_segment(
+                            [line_vertices[0], line_vertices[1]],
+                            Stroke::new(2.0, Color32::BLUE),
+                        );
+                    }
+
+                    next_edge = edges.get(&next_edge).unwrap().next;
+                    if next_edge == first_edge {
+                        break;
+                    }
+                }
             }
         }
     }
