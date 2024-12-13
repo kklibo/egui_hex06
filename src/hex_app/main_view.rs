@@ -339,42 +339,43 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
 
             let mut edges = edges.clone();
+            while !edges.is_empty() {
+                let first_edge = edges
+                    .keys()
+                    .next()
+                    .copied()
+                    .and_then(|id| edges.remove(&id));
 
-            let first_edge = edges
-                .keys()
-                .next()
-                .copied()
-                .and_then(|id| edges.remove(&id));
+                if let Some(first_edge) = first_edge {
+                    let mut next_id = first_edge.next;
 
-            if let Some(first_edge) = first_edge {
-                let mut next_id = first_edge.next;
-
-                let mut line_vertices = VecDeque::new();
-                let point = first_edge.start;
-                let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
-                let coord = coord + center.to_vec2();
-                line_vertices.push_back(coord);
-
-                loop {
-                    let next_edge = edges.remove(&next_id).unwrap_or(first_edge);
-                    let point = next_edge.start;
+                    let mut line_vertices = VecDeque::new();
+                    let point = first_edge.start;
                     let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
                     let coord = coord + center.to_vec2();
-
                     line_vertices.push_back(coord);
-                    if line_vertices.len() > 2 {
-                        line_vertices.pop_front();
-                    }
-                    if line_vertices.len() == 2 {
-                        painter.line_segment(
-                            [line_vertices[0], line_vertices[1]],
-                            Stroke::new(2.0, Color32::BLUE),
-                        );
-                    }
 
-                    next_id = next_edge.next;
-                    if next_id == first_edge.next {
-                        break;
+                    loop {
+                        let next_edge = edges.remove(&next_id).unwrap_or(first_edge);
+                        let point = next_edge.start;
+                        let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
+                        let coord = coord + center.to_vec2();
+
+                        line_vertices.push_back(coord);
+                        if line_vertices.len() > 2 {
+                            line_vertices.pop_front();
+                        }
+                        if line_vertices.len() == 2 {
+                            painter.line_segment(
+                                [line_vertices[0], line_vertices[1]],
+                                Stroke::new(2.0, Color32::BLUE),
+                            );
+                        }
+
+                        next_id = next_edge.next;
+                        if next_id == first_edge.next {
+                            break;
+                        }
                     }
                 }
             }
