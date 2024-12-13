@@ -284,8 +284,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             let mut next_edge_id: usize = 0;
             let mut edges = HashMap::<usize, Edge>::new();
 
-            let mut add_edge = |id: usize, next: usize, start: (u64, u64)| {
-                assert_eq!(None, edges.insert(id, Edge { next, start }));
+            let mut add_edge = |id: usize, next: usize, start: (u64, u64), end: (u64, u64)| {
+                //assert_eq!(None, edges.insert(id, Edge { next, start }));
+
+                let same_start_as_new = edges
+                    .iter()
+                    .map(|(&id, &edge)| (id, edge))
+                    .filter(|&(id, edge)| edge.start == start)
+                    .collect::<Vec<_>>();
+            
+                
             };
 
             let mut include_block = |index: u64, count: u64| {
@@ -310,10 +318,10 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
 
                 let id = next_edge_id;
-                add_edge(id + 0, id + 1, vertices[0]);
-                add_edge(id + 1, id + 2, vertices[1]);
-                add_edge(id + 2, id + 3, vertices[2]);
-                add_edge(id + 3, id + 0, vertices[3]);
+                add_edge(id + 0, id + 1, vertices[0], vertices[1]);
+                add_edge(id + 1, id + 2, vertices[1], vertices[2]);
+                add_edge(id + 2, id + 3, vertices[2], vertices[3]);
+                add_edge(id + 3, id + 0, vertices[3], vertices[0]);
                 next_edge_id += 4;
             };
 
