@@ -276,7 +276,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if let Some(selected_index) = hex_app.selected_index {
             let mut points = HashSet::new();
 
-            let mut edge_set = EdgeSet::default();
+            let mut perimeter = Perimeter::default();
 
             let mut include_block = |index: u64, count: u64| {
                 let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
@@ -299,7 +299,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     };
                 }
 
-                edge_set.add_rect(y_min, x_min, y_max, x_max);
+                perimeter.add_rect(y_min, x_min, y_max, x_max);
             };
 
             for (index, count, rect) in selection_range_blocks(
@@ -329,7 +329,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 coord
             };
 
-            for edge in edge_set.edges {
+            for edge in perimeter.edges {
                 painter.line_segment(
                     [to_coord(edge.start), to_coord(edge.end)],
                     Stroke::new(2.0, Color32::BLUE),
@@ -348,7 +348,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 }
 
 #[derive(Default)]
-struct EdgeSet {
+struct Perimeter {
     next_edge_id: usize,
     edges: Vec<Edge>,
 }
@@ -361,7 +361,7 @@ struct Edge {
     end: (u64, u64),
 }
 
-impl EdgeSet {
+impl Perimeter {
     fn add_rect(&mut self, top: u64, left: u64, bottom: u64, right: u64) {
         let id = self.next_edge_id;
         self.add_edge(id + 0, id + 1, (left, top), (right, top));
@@ -378,9 +378,13 @@ impl EdgeSet {
         mut start: (u64, u64),
         mut end: (u64, u64),
     ) {
+        // Edges must be horizontal or vertical.
+        assert!(start.0 == end.0 || start.1 == end.1);
+
         let mut next_edges = Vec::new();
 
         for edge in self.edges.clone() {
+            // If the new edge ends at the start of a collinear edge, merge them.
             if end == edge.start && (start.0 == edge.end.0 || start.1 == edge.end.1) {
                 end = edge.end;
                 next = edge.next;
@@ -392,6 +396,7 @@ impl EdgeSet {
         let mut next_edges2 = Vec::new();
 
         for edge in next_edges {
+            // If the new edge starts at the end of a collinear edge, merge them.
             if edge.end == start && (edge.start.0 == end.0 || edge.start.1 == end.1) {
                 start = edge.start;
                 id = edge.id;
@@ -401,6 +406,7 @@ impl EdgeSet {
         }
 
         if start != end {
+            // Include this edge if it isn't null.
             next_edges2.push(Edge {
                 id,
                 next,
@@ -409,7 +415,6 @@ impl EdgeSet {
             });
         }
 
-        self.edges.clear();
-        self.edges.append(&mut next_edges2);
+        self.edges = next_edges2;
     }
 }
