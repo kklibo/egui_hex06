@@ -299,12 +299,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     };
                 }
 
-                let id = edge_set.next_edge_id;
-                edge_set.add_edge(id + 0, id + 1, vertices[0], vertices[1]);
-                edge_set.add_edge(id + 1, id + 2, vertices[1], vertices[2]);
-                edge_set.add_edge(id + 2, id + 3, vertices[2], vertices[3]);
-                edge_set.add_edge(id + 3, id + 0, vertices[3], vertices[0]);
-                edge_set.next_edge_id += 4;
+                edge_set.add_rect(y_min, x_min, y_max, x_max);
             };
 
             for (index, count, rect) in selection_range_blocks(
@@ -367,6 +362,15 @@ struct Edge {
 }
 
 impl EdgeSet {
+    fn add_rect(&mut self, top: u64, left: u64, bottom: u64, right: u64) {
+        let id = self.next_edge_id;
+        self.add_edge(id + 0, id + 1, (left, top), (right, top));
+        self.add_edge(id + 1, id + 2, (right, top), (right, bottom));
+        self.add_edge(id + 2, id + 3, (right, bottom), (left, bottom));
+        self.add_edge(id + 3, id + 0, (left, bottom), (left, top));
+        self.next_edge_id += 4;
+    }
+
     fn add_edge(
         &mut self,
         mut id: usize,
