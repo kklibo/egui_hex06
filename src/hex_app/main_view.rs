@@ -383,31 +383,25 @@ impl Perimeter {
 
         let mut next_edges = Vec::new();
 
-        for edge in self.edges.clone() {
+        for &edge in &self.edges {
             // If the new edge ends at the start of a collinear edge, merge them.
             if end == edge.start && (start.0 == edge.end.0 || start.1 == edge.end.1) {
                 end = edge.end;
                 next = edge.next;
-            } else {
-                next_edges.push(edge);
+                continue;
             }
-        }
-
-        let mut next_edges2 = Vec::new();
-
-        for edge in next_edges {
             // If the new edge starts at the end of a collinear edge, merge them.
             if edge.end == start && (edge.start.0 == end.0 || edge.start.1 == end.1) {
                 start = edge.start;
                 id = edge.id;
-            } else {
-                next_edges2.push(edge);
+                continue;
             }
+            next_edges.push(edge);
         }
 
         if start != end {
-            // Include this edge if it isn't null.
-            next_edges2.push(Edge {
+            // Include the new edge if it isn't null.
+            next_edges.push(Edge {
                 id,
                 next,
                 start,
@@ -415,6 +409,6 @@ impl Perimeter {
             });
         }
 
-        self.edges = next_edges2;
+        self.edges = next_edges;
     }
 }
