@@ -329,11 +329,14 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 coord
             };
 
-            for edge in perimeter.edges {
-                painter.line_segment(
-                    [to_coord(edge.start), to_coord(edge.end)],
-                    Stroke::new(2.0, Color32::BLUE),
-                );
+            let mut loops_iter = LoopsIter::new(perimeter.edges);
+            while let Some(loop_iter) = loops_iter.next() {
+                for edge in loop_iter {
+                    painter.line_segment(
+                        [to_coord(edge.start), to_coord(edge.end)],
+                        Stroke::new(2.0, Color32::BLUE),
+                    );
+                }
             }
         }
     }
@@ -413,17 +416,36 @@ impl Perimeter {
     }
 }
 
-struct LoopIter {
-    next_id: usize,
+struct LoopsIter {
     edges: HashMap<usize, Edge>,
 }
 
-impl LoopIter {
-    fn new(edges_vec: Vec<Edge>, first_id: usize) -> Self {
+impl LoopsIter {
+    fn new(edges_vec: Vec<Edge>) -> Self {
         let mut edges = HashMap::new();
         for edge in edges_vec {
             assert!(edges.insert(edge.id, edge).is_none());
         }
+        Self { edges }
+    }
+
+    fn next(&mut self) -> Option<LoopIter<'_>> {
+        let first_id = self.edges.iter().min_by_key(|&(&x, _)| x).map(|(&x, _)| x);
+        if let Some(first_id) = first_id {
+            let loop_iter = LoopIter::new(&mut self.edges, first_id);
+            return Some(loop_iter);
+        }
+        None
+    }
+}
+
+struct LoopIter<'a> {
+    next_id: usize,
+    edges: &'a mut HashMap<usize, Edge>,
+}
+
+impl<'a> LoopIter<'a> {
+    fn new(edges: &'a mut HashMap<usize, Edge>, first_id: usize) -> Self {
         Self {
             next_id: first_id,
             edges,
@@ -431,7 +453,7 @@ impl LoopIter {
     }
 }
 
-impl Iterator for LoopIter {
+impl Iterator for LoopIter<'_> {
     type Item = Edge;
 
     fn next(&mut self) -> Option<Self::Item> {
