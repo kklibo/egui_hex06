@@ -411,49 +411,33 @@ impl Perimeter {
 
         self.edges = next_edges;
     }
+}
 
-    fn into_iter(self) -> IntoIter {
+struct LoopIter {
+    next_id: usize,
+    edges: HashMap<usize, Edge>,
+}
+
+impl LoopIter {
+    fn new(edges_vec: Vec<Edge>, first_id: usize) -> Self {
         let mut edges = HashMap::new();
-        for edge in self.edges {
+        for edge in edges_vec {
             assert!(edges.insert(edge.id, edge).is_none());
         }
-
-        IntoIter {
-            active_loop: None,
+        Self {
+            next_id: first_id,
             edges,
         }
     }
 }
 
-struct IntoIter {
-    active_loop: Option<(Edge, usize)>,
-    edges: HashMap<usize, Edge>,
-}
-
-impl Iterator for IntoIter {
-    type Item = (Edge, Edge);
+impl Iterator for LoopIter {
+    type Item = Edge;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.active_loop.is_none() {
-            if let Some((&id, &edge)) = self.edges.iter().min_by_key(|&(&x, _)| x) {
-                self.active_loop = Some((edge, id));
-            }
-        }
-
-        if let Some((start_edge, next_id)) = self.active_loop {
-            if let Some(edge) = self.edges.remove(&next_id) {
-                let val = if let Some(&next_edge) = self.edges.get(&edge.next) {
-                    self.active_loop = Some((start_edge, edge.next));
-                    Some((edge, next_edge))
-                } else {
-                    None
-                };
-                if edge.next == start_edge.id {
-                    self.active_loop = None;
-                }
-
-                return val;
-            }
+        if let Some(edge) = self.edges.remove(&self.next_id) {
+            self.next_id = edge.next;
+            return Some(edge);
         }
 
         None
