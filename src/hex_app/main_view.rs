@@ -342,6 +342,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     };
                     c += 1;
 
+                    assert_eq!(edge.end, next_edge.start);
+
                     painter.line_segment(
                         [to_coord(edge.start), to_coord(edge.end)],
                         Stroke::new(2.0, color),
@@ -354,9 +356,23 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         (to_coord(next_edge.end) - to_coord(next_edge.start)) / 2.0;
                     let next_edge_midpoint = to_coord(next_edge.start) + next_edge_half_vec;
 
+                    let vec0 = to_coord(edge.end) - to_coord(edge.start);
+                    let vec1 = to_coord(next_edge.end) - to_coord(next_edge.start);
+
+                    let bound_size = (vec0 + vec1).abs();
+                    let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size * 0.5);
+
                     painter.line_segment(
                         [edge_midpoint, next_edge_midpoint],
                         Stroke::new(2.0, Color32::ORANGE),
+                    );
+
+                    let rect = Rect::from_two_pos(edge_midpoint, next_edge_midpoint);
+                    hex_app.rect_draw_count += 1;
+                    painter.with_clip_rect(clip_rect).rect_stroke(
+                        rect.shrink(1.0),
+                        10.0,
+                        Stroke::new(2.0, Color32::BLACK),
                     );
                 }
             }
