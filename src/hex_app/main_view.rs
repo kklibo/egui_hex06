@@ -331,10 +331,20 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
             let mut loops_iter = LoopsIter::new(perimeter.edges);
             while let Some(loop_iter) = loops_iter.next() {
+                let mut c = 0u8;
                 for (edge, next_edge) in LoopPairIter::new(loop_iter) {
+                    let color = match c % 4 {
+                        0 => Color32::RED,
+                        1 => Color32::GREEN,
+                        2 => Color32::BLUE,
+                        3 => Color32::YELLOW,
+                        _ => unreachable!(),
+                    };
+                    c += 1;
+
                     painter.line_segment(
                         [to_coord(edge.start), to_coord(edge.end)],
-                        Stroke::new(2.0, Color32::BLUE),
+                        Stroke::new(2.0, color),
                     );
                     painter.line_segment(
                         [to_coord(edge.midpoint()), to_coord(next_edge.midpoint())],
