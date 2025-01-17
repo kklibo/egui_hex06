@@ -465,3 +465,51 @@ impl Iterator for LoopIter<'_> {
         None
     }
 }
+
+struct LoopPairIter<I, T>
+where
+    I: Iterator<Item = T>,
+    T: Clone,
+{
+    iter: I,
+    first: Option<T>,
+    prev: Option<T>,
+}
+
+impl<I, T> LoopPairIter<I, T>
+where
+    I: Iterator<Item = T>,
+    T: Clone,
+{
+    fn new(iter: I) -> Self {
+        Self {
+            iter,
+            first: None,
+            prev: None,
+        }
+    }
+}
+
+impl<I, T> Iterator for LoopPairIter<I, T>
+where
+    I: Iterator<Item = T>,
+    T: Clone,
+{
+    type Item = (T, T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(next) = self.iter.next() {
+            if let Some(prev) = self.prev.take() {
+                self.prev = Some(next.clone());
+                return Some((prev, next));
+            } else {
+                self.first = Some(next.clone());
+                self.prev = Some(next);
+            }
+        } else if let (Some(prev), Some(first)) = (self.prev.take(), self.first.take()) {
+            return Some((prev, first));
+        }
+
+        None
+    }
+}
