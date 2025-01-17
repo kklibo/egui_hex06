@@ -331,10 +331,14 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
             let mut loops_iter = LoopsIter::new(perimeter.edges);
             while let Some(loop_iter) = loops_iter.next() {
-                for edge in loop_iter {
+                for (edge, next_edge) in LoopPairIter::new(loop_iter) {
                     painter.line_segment(
                         [to_coord(edge.start), to_coord(edge.end)],
                         Stroke::new(2.0, Color32::BLUE),
+                    );
+                    painter.line_segment(
+                        [to_coord(edge.midpoint()), to_coord(next_edge.midpoint())],
+                        Stroke::new(2.0, Color32::ORANGE),
                     );
                 }
             }
@@ -362,6 +366,16 @@ struct Edge {
     next: usize,
     start: (u64, u64),
     end: (u64, u64),
+}
+
+impl Edge {
+    fn midpoint(&self) -> (u64, u64) {
+        //replace with u64::midpoint when stabilized
+        (
+            (self.start.0 & self.end.0) + ((self.start.0 ^ self.end.0) >> 1),
+            (self.start.1 & self.end.1) + ((self.start.1 ^ self.end.1) >> 1),
+        )
+    }
 }
 
 impl Perimeter {
@@ -498,18 +512,21 @@ where
     type Item = (T, T);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(next) = self.iter.next() {
-            if let Some(prev) = self.prev.take() {
-                self.prev = Some(next.clone());
-                return Some((prev, next));
+        loop {
+            if let Some(next) = self.iter.next() {
+                if let Some(prev) = self.prev.take() {
+                    self.prev = Some(next.clone());
+                    return Some((prev, next));
+                } else {
+                    self.first = Some(next.clone());
+                    self.prev = Some(next);
+                    continue;
+                }
+            } else if let (Some(prev), Some(first)) = (self.prev.take(), self.first.take()) {
+                return Some((prev, first));
             } else {
-                self.first = Some(next.clone());
-                self.prev = Some(next);
+                return None;
             }
-        } else if let (Some(prev), Some(first)) = (self.prev.take(), self.first.take()) {
-            return Some((prev, first));
         }
-
-        None
     }
 }
