@@ -346,8 +346,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         [to_coord(edge.start), to_coord(edge.end)],
                         Stroke::new(2.0, color),
                     );
+
+                    let edge_half_vec = (to_coord(edge.end) - to_coord(edge.start)) / 2.0;
+                    let edge_midpoint = to_coord(edge.start) + edge_half_vec;
+
+                    let next_edge_half_vec =
+                        (to_coord(next_edge.end) - to_coord(next_edge.start)) / 2.0;
+                    let next_edge_midpoint = to_coord(next_edge.start) + next_edge_half_vec;
+
                     painter.line_segment(
-                        [to_coord(edge.midpoint()), to_coord(next_edge.midpoint())],
+                        [edge_midpoint, next_edge_midpoint],
                         Stroke::new(2.0, Color32::ORANGE),
                     );
                 }
@@ -376,16 +384,6 @@ struct Edge {
     next: usize,
     start: (u64, u64),
     end: (u64, u64),
-}
-
-impl Edge {
-    fn midpoint(&self) -> (u64, u64) {
-        //replace with u64::midpoint when stabilized
-        (
-            (self.start.0 & self.end.0) + ((self.start.0 ^ self.end.0) >> 1),
-            (self.start.1 & self.end.1) + ((self.start.1 ^ self.end.1) >> 1),
-        )
-    }
 }
 
 impl Perimeter {
