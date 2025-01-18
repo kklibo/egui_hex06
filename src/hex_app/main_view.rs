@@ -330,39 +330,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
             let mut loops_iter = LoopsIter::new(perimeter.edges);
             while let Some(loop_iter) = loops_iter.next() {
-                let mut c = 0u8;
                 for (edge, next_edge) in LoopPairIter::new(loop_iter) {
-                    let color = match c % 4 {
-                        0 => Color32::RED,
-                        1 => Color32::GREEN,
-                        2 => Color32::BLUE,
-                        3 => Color32::YELLOW,
-                        _ => unreachable!(),
-                    };
-                    c += 1;
-
                     assert_eq!(edge.end, next_edge.start);
-
-                    let edge_vec = to_coord(edge.end) - to_coord(edge.start);
-                    let edge_q1 = to_coord(edge.start) + edge_vec * 0.25;
-                    let edge_q3 = to_coord(edge.start) + edge_vec * 0.75;
-
-                    painter.line_segment([edge_q1, edge_q3], Stroke::new(2.0, color));
-
-                    let edge_half_vec = (to_coord(edge.end) - to_coord(edge.start)) / 2.0;
-                    let edge_midpoint = to_coord(edge.start) + edge_half_vec;
-
-                    let next_edge_half_vec =
-                        (to_coord(next_edge.end) - to_coord(next_edge.start)) / 2.0;
-                    let next_edge_midpoint = to_coord(next_edge.start) + next_edge_half_vec;
 
                     let vec0 = to_coord(edge.end) - to_coord(edge.start);
                     let vec1 = to_coord(next_edge.end) - to_coord(next_edge.start);
 
                     let bound_size = (vec0 + vec1).abs();
-                    let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size * 0.5);
+                    let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size);
 
-                    let rect = Rect::from_two_pos(edge_midpoint, next_edge_midpoint);
+                    let rect = Rect::from_two_pos(to_coord(edge.start), to_coord(next_edge.end));
                     hex_app.rect_draw_count += 1;
                     painter.with_clip_rect(clip_rect).rect_stroke(
                         rect.shrink(1.0),
