@@ -344,10 +344,11 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
                     assert_eq!(edge.end, next_edge.start);
 
-                    painter.line_segment(
-                        [to_coord(edge.start), to_coord(edge.end)],
-                        Stroke::new(2.0, color),
-                    );
+                    let edge_vec = to_coord(edge.end) - to_coord(edge.start);
+                    let edge_q1 = to_coord(edge.start) + edge_vec * 0.25;
+                    let edge_q3 = to_coord(edge.start) + edge_vec * 0.75;
+
+                    painter.line_segment([edge_q1, edge_q3], Stroke::new(2.0, color));
 
                     let edge_half_vec = (to_coord(edge.end) - to_coord(edge.start)) / 2.0;
                     let edge_midpoint = to_coord(edge.start) + edge_half_vec;
@@ -361,11 +362,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
                     let bound_size = (vec0 + vec1).abs();
                     let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size * 0.5);
-
-                    painter.line_segment(
-                        [edge_midpoint, next_edge_midpoint],
-                        Stroke::new(2.0, Color32::ORANGE),
-                    );
 
                     let rect = Rect::from_two_pos(edge_midpoint, next_edge_midpoint);
                     hex_app.rect_draw_count += 1;
