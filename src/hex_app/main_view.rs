@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 
 use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
@@ -325,8 +325,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
             let to_coord = |point: (u64, u64)| -> Pos2 {
                 let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
-                let coord = coord + center.to_vec2();
-                coord
+                coord + center.to_vec2()
             };
 
             let mut loops_iter = LoopsIter::new(perimeter.edges);
@@ -401,10 +400,10 @@ struct Edge {
 impl Perimeter {
     fn add_rect(&mut self, top: u64, left: u64, bottom: u64, right: u64) {
         let id = self.next_edge_id;
-        self.add_edge(id + 0, id + 1, (left, top), (right, top));
+        self.add_edge(id, id + 1, (left, top), (right, top));
         self.add_edge(id + 1, id + 2, (right, top), (right, bottom));
         self.add_edge(id + 2, id + 3, (right, bottom), (left, bottom));
-        self.add_edge(id + 3, id + 0, (left, bottom), (left, top));
+        self.add_edge(id + 3, id, (left, bottom), (left, top));
         self.next_edge_id += 4;
     }
 
