@@ -330,17 +330,9 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
             let mut loops_iter = LoopsIter::new(perimeter.edges);
 
-            if hex_app.dbg_flag {
-                log::info!("***start loops iter***");
-            }
             while let Some(loop_iter) = loops_iter.next() {
                 for (edge, next_edge) in LoopPairIter::new(loop_iter) {
-                    //assert_eq!(edge.end, next_edge.start);
-                    if hex_app.dbg_flag {
-                        log::info!("edge: {:?}", edge);
-                        log::info!("next_edge: {:?}", next_edge);
-                        log::info!("---");
-                    }
+                    assert_eq!(edge.end, next_edge.start);
 
                     let vec0 = to_coord(edge.end) - to_coord(edge.start);
                     let vec1 = to_coord(next_edge.end) - to_coord(next_edge.start);
@@ -356,12 +348,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         Stroke::new(2.0, Color32::BLACK),
                     );
                 }
-                if hex_app.dbg_flag {
-                    log::info!("***end single loop***");
-                }
             }
-
-            hex_app.dbg_flag = false;
         }
     }
 
