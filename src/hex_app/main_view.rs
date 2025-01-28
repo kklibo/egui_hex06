@@ -411,16 +411,16 @@ impl Perimeter {
         let mut next_edges = Vec::new();
 
         for &edge in &self.edges {
-            // If the new edge ends at the start of a collinear edge, merge them.
-            if end == edge.start && (start.0 == edge.end.0 || start.1 == edge.end.1) {
-                end = edge.end;
-                next = edge.next;
-                continue;
-            }
             // If the new edge starts at the end of a collinear edge, merge them.
             if edge.end == start && (edge.start.0 == end.0 || edge.start.1 == end.1) {
                 start = edge.start;
                 id = edge.id;
+                continue;
+            }
+            // If the new edge ends at the start of a collinear edge, merge them.
+            if end == edge.start && (start.0 == edge.end.0 || start.1 == edge.end.1) {
+                end = edge.end;
+                next = edge.next;
                 continue;
             }
             next_edges.push(edge);
@@ -554,7 +554,6 @@ mod tests {
         perimeter.add_rect(3, 2, 4, 3);
         perimeter.add_rect(3, 3, 4, 4);
         perimeter.add_rect(0, 4, 4, 8);
-
 
         let mut loops_iter = LoopsIter::new(perimeter.edges);
 
