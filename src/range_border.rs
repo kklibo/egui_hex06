@@ -1,20 +1,21 @@
+use std::collections::HashMap;
 
 #[derive(Default)]
-struct RangeBorder {
+pub struct RangeBorder {
     next_edge_id: usize,
-    edges: Vec<Edge>,
+    pub edges: Vec<Edge>,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-struct Edge {
-    id: usize,
-    next: usize,
-    start: (u64, u64),
-    end: (u64, u64),
+pub struct Edge {
+    pub id: usize,
+    pub next: usize,
+    pub start: (u64, u64),
+    pub end: (u64, u64),
 }
 
 impl RangeBorder {
-    fn add_rect(&mut self, top: u64, left: u64, bottom: u64, right: u64) {
+    pub fn add_rect(&mut self, top: u64, left: u64, bottom: u64, right: u64) {
         let id = self.next_edge_id;
         self.add_edge(id, id + 1, (left, top), (right, top));
         self.add_edge(id + 1, id + 2, (right, top), (right, bottom));
@@ -65,12 +66,12 @@ impl RangeBorder {
     }
 }
 
-struct LoopsIter {
+pub struct LoopsIter {
     edges: HashMap<usize, Edge>,
 }
 
 impl LoopsIter {
-    fn new(edges_vec: Vec<Edge>) -> Self {
+    pub fn new(edges_vec: Vec<Edge>) -> Self {
         let mut edges = HashMap::new();
         for edge in edges_vec {
             assert!(edges.insert(edge.id, edge).is_none());
@@ -78,7 +79,7 @@ impl LoopsIter {
         Self { edges }
     }
 
-    fn next(&mut self) -> Option<LoopIter<'_>> {
+    pub fn next(&mut self) -> Option<LoopIter<'_>> {
         let first_id = self.edges.iter().min_by_key(|&(&x, _)| x).map(|(&x, _)| x);
         if let Some(first_id) = first_id {
             let loop_iter = LoopIter::new(&mut self.edges, first_id);
@@ -88,13 +89,13 @@ impl LoopsIter {
     }
 }
 
-struct LoopIter<'a> {
+pub struct LoopIter<'a> {
     next_id: usize,
     edges: &'a mut HashMap<usize, Edge>,
 }
 
 impl<'a> LoopIter<'a> {
-    fn new(edges: &'a mut HashMap<usize, Edge>, first_id: usize) -> Self {
+    pub fn new(edges: &'a mut HashMap<usize, Edge>, first_id: usize) -> Self {
         Self {
             next_id: first_id,
             edges,
@@ -115,7 +116,7 @@ impl Iterator for LoopIter<'_> {
     }
 }
 
-struct LoopPairIter<I, T>
+pub struct LoopPairIter<I, T>
 where
     I: Iterator<Item = T>,
     T: Clone,
@@ -130,7 +131,7 @@ where
     I: Iterator<Item = T>,
     T: Clone,
 {
-    fn new(iter: I) -> Self {
+    pub fn new(iter: I) -> Self {
         Self {
             iter,
             first: None,

@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
@@ -7,6 +7,7 @@ use crate::range_blocks::{
     get_cell_offset, max_recursion_level, range_block_rect, Cacheable,
     CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
 };
+use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
 use egui::{Align2, Color32, Context, FontId, Pos2, Rect, Sense, Stroke, Ui, Vec2};
 
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
