@@ -1,11 +1,14 @@
+use std::collections::HashSet;
+
 use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
 };
 use crate::range_blocks::{
-    max_recursion_level, range_block_rect, Cacheable, CompleteLargestRangeBlockIterator,
-    RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
+    get_cell_offset, max_recursion_level, range_block_rect, Cacheable,
+    CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
 };
-use egui::{Align2, Color32, Context, FontId, Rect, Sense, Stroke, Ui, Vec2};
+use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
+use egui::{Align2, Color32, Context, FontId, Pos2, Rect, Sense, Stroke, Ui, Vec2};
 
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     hex_app.selected_range_block = None; // Reset selected range block (should this be done some other way?)
@@ -132,6 +135,24 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
 
         for (index, count, rect) in visible_range_blocks(rendered_recursion_level) {
+            if index + count > data_len {
+                // Final incomplete range block
+                if let Some(count) = data_len.checked_sub(index) {
+                    for (_index, _count, rect) in selection_range_blocks(index, count) {
+                        hex_app.rect_draw_count += 1;
+                        painter.rect_stroke(
+                            rect.shrink(1.0),
+                            10.0,
+                            Stroke::new(2.0, Color32::DARK_RED),
+                        );
+                    }
+                } else {
+                    // This should be impossible.
+                    log::error!("index > data_len");
+                }
+                continue;
+            }
+
             let diff_bytes = if hex_app.color_mode == ColorMode::Diff {
                 if let Some(other_data) = other_data {
                     hex_app.diff_cache.get(index, count).unwrap_or_else(|| {
@@ -209,7 +230,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if rendered_recursion_level < max_recursion_level {
             for (_index, _count, rect) in visible_range_blocks(rendered_recursion_level + 1) {
                 hex_app.rect_draw_count += 1;
-                painter.rect_stroke(rect, 10.0, Stroke::new(2.0, Color32::BLACK));
+                painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::BLACK));
             }
         }
 
@@ -248,18 +269,86 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 if index <= selected_index as u64 && (selected_index as u64) < index + count {
                     hex_app.selected_range_block = Some((index, count));
                     hex_app.rect_draw_count += 1;
-                    painter.rect_stroke(rect, 10.0, Stroke::new(2.0, Color32::WHITE));
+                    painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::WHITE));
                 }
             }
         }
 
         if let Some(selected_index) = hex_app.selected_index {
-            for (_index, _count, rect) in selection_range_blocks(
+            let mut points = HashSet::new();
+
+            let mut range_border = RangeBorder::default();
+
+            let mut include_block = |index: u64, count: u64| {
+                let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
+                let (x_max, y_max) = get_cell_offset(index + count - 1, sub_block_sqrt);
+                let x_max = x_max + 1;
+                let y_max = y_max + 1;
+
+                let vertices = [
+                    (x_min, y_min),
+                    (x_max, y_min),
+                    (x_max, y_max),
+                    (x_min, y_max),
+                ];
+
+                for vertex in vertices {
+                    if points.contains(&vertex) {
+                        points.remove(&vertex)
+                    } else {
+                        points.insert(vertex)
+                    };
+                }
+
+                range_border.add_rect(y_min, x_min, y_max, x_max);
+            };
+
+            for (index, count, rect) in selection_range_blocks(
                 selected_index as u64,
                 u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
             ) {
+                include_block(index, count);
+
                 hex_app.rect_draw_count += 1;
-                painter.rect_stroke(rect, 10.0, Stroke::new(2.0, Color32::GOLD));
+                painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
+            }
+
+            for point in points {
+                hex_app.rect_draw_count += 1;
+
+                let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
+                let coord = coord + center.to_vec2();
+                //let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
+                //let rect = rect.translate(center.to_vec2());
+
+                painter.circle_filled(coord, 2.0, Color32::GREEN);
+            }
+
+            let to_coord = |point: (u64, u64)| -> Pos2 {
+                let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
+                coord + center.to_vec2()
+            };
+
+            let mut loops_iter = LoopsIter::new(range_border.edges);
+
+            while let Some(loop_iter) = loops_iter.next() {
+                for (edge, next_edge) in LoopPairIter::new(loop_iter) {
+                    assert_eq!(edge.end, next_edge.start);
+
+                    let vec0 = to_coord(edge.end) - to_coord(edge.start);
+                    let vec1 = to_coord(next_edge.end) - to_coord(next_edge.start);
+
+                    let bound_size = (vec0 + vec1).abs();
+                    let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size);
+
+                    let rect = Rect::from_two_pos(to_coord(edge.start), to_coord(next_edge.end));
+                    hex_app.rect_draw_count += 1;
+                    painter.with_clip_rect(clip_rect).rect_stroke(
+                        rect.shrink(1.0),
+                        10.0,
+                        Stroke::new(2.0, Color32::BLACK),
+                    );
+                }
             }
         }
     }

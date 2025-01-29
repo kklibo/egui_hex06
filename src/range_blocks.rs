@@ -159,7 +159,6 @@ pub fn next_complete_largest_range_block(
     // Find the largest range block that
     // - starts at index
     // - ends before limit_index
-    // - passes fn_filter
 
     (0..=max_recursion_level)
         .rev()
