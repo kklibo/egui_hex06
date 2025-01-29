@@ -276,7 +276,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if let Some(selected_index) = hex_app.selected_index {
             let mut points = HashSet::new();
 
-            let mut perimeter = Perimeter::default();
+            let mut range_border = RangeBorder::default();
 
             let mut include_block = |index: u64, count: u64| {
                 let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
@@ -299,7 +299,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     };
                 }
 
-                perimeter.add_rect(y_min, x_min, y_max, x_max);
+                range_border.add_rect(y_min, x_min, y_max, x_max);
             };
 
             for (index, count, rect) in selection_range_blocks(
@@ -328,7 +328,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 coord + center.to_vec2()
             };
 
-            let mut loops_iter = LoopsIter::new(perimeter.edges);
+            let mut loops_iter = LoopsIter::new(range_border.edges);
 
             while let Some(loop_iter) = loops_iter.next() {
                 for (edge, next_edge) in LoopPairIter::new(loop_iter) {
@@ -362,7 +362,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 }
 
 #[derive(Default)]
-struct Perimeter {
+struct RangeBorder {
     next_edge_id: usize,
     edges: Vec<Edge>,
 }
@@ -375,7 +375,7 @@ struct Edge {
     end: (u64, u64),
 }
 
-impl Perimeter {
+impl RangeBorder {
     fn add_rect(&mut self, top: u64, left: u64, bottom: u64, right: u64) {
         let id = self.next_edge_id;
         self.add_edge(id, id + 1, (left, top), (right, top));
@@ -534,7 +534,7 @@ mod tests {
 
     #[test]
     fn test_perimeter_broken_loop_bug() {
-        let mut perimeter = Perimeter::default();
+        let mut perimeter = RangeBorder::default();
         perimeter.add_rect(2, 3, 3, 4);
         perimeter.add_rect(3, 0, 4, 1);
         perimeter.add_rect(3, 1, 4, 2);
