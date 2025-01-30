@@ -273,85 +273,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             }
         }
-        /*
-        if let Some(selected_index) = hex_app.selected_index {
-            let mut points = HashSet::new();
-
-            let mut range_border = RangeBorder::default();
-
-            let mut include_block = |index: u64, count: u64| {
-                let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
-                let (x_max, y_max) = get_cell_offset(index + count - 1, sub_block_sqrt);
-                let x_max = x_max + 1;
-                let y_max = y_max + 1;
-
-                let vertices = [
-                    (x_min, y_min),
-                    (x_max, y_min),
-                    (x_max, y_max),
-                    (x_min, y_max),
-                ];
-
-                for vertex in vertices {
-                    if points.contains(&vertex) {
-                        points.remove(&vertex)
-                    } else {
-                        points.insert(vertex)
-                    };
-                }
-
-                range_border.add_rect(y_min, x_min, y_max, x_max);
-            };
-
-            for (index, count, rect) in selection_range_blocks(
-                selected_index as u64,
-                u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
-            ) {
-                include_block(index, count);
-
-                hex_app.rect_draw_count += 1;
-                painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
-            }
-
-            for point in points {
-                hex_app.rect_draw_count += 1;
-
-                let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
-                let coord = coord + center.to_vec2();
-                //let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-                //let rect = rect.translate(center.to_vec2());
-
-                painter.circle_filled(coord, 2.0, Color32::GREEN);
-            }
-
-            let to_coord = |point: (u64, u64)| -> Pos2 {
-                let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
-                coord + center.to_vec2()
-            };
-
-            let mut loops_iter = LoopsIter::new(range_border.edges);
-
-            while let Some(loop_iter) = loops_iter.next() {
-                for (edge, next_edge) in LoopPairIter::new(loop_iter) {
-                    assert_eq!(edge.end, next_edge.start);
-
-                    let vec0 = to_coord(edge.end) - to_coord(edge.start);
-                    let vec1 = to_coord(next_edge.end) - to_coord(next_edge.start);
-
-                    let bound_size = (vec0 + vec1).abs();
-                    let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size);
-
-                    let rect = Rect::from_two_pos(to_coord(edge.start), to_coord(next_edge.end));
-                    hex_app.rect_draw_count += 1;
-                    painter.with_clip_rect(clip_rect).rect_stroke(
-                        rect.shrink(1.0),
-                        10.0,
-                        Stroke::new(2.0, Color32::BLACK),
-                    );
-                }
-            }
-        }
-        */
 
         if let Some(selected_index) = hex_app.selected_index {
             draw_range_border_secondary_temp(
@@ -389,16 +310,13 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 }
 
 fn draw_range_border(
-    //hex_app: &mut HexApp,
     painter: &Painter,
     range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
     sub_block_sqrt: u64,
     center: Pos2,
     zoom: f32,
 ) {
-    //let mut points = HashSet::new();
-
-    let mut range_border = RangeBorder::default();    
+    let mut range_border = RangeBorder::default();
 
     let mut include_block = |index: u64, count: u64| {
         let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
@@ -406,43 +324,12 @@ fn draw_range_border(
         let x_max = x_max + 1;
         let y_max = y_max + 1;
 
-        /*let vertices = [
-            (x_min, y_min),
-            (x_max, y_min),
-            (x_max, y_max),
-            (x_min, y_max),
-        ];
-
-        for vertex in vertices {
-            if points.contains(&vertex) {
-                points.remove(&vertex)
-            } else {
-                points.insert(vertex)
-            };
-        }*/
-
         range_border.add_rect(y_min, x_min, y_max, x_max);
     };
 
-    for (index, count, rect) in range_blocks
-    //selection_range_blocks(selected_index as u64,u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns)),
-    {
+    for (index, count, _rect) in range_blocks {
         include_block(index, count);
-
-        //hex_app.rect_draw_count += 1;
-        //painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
     }
-/*
-    for point in points {
-        //hex_app.rect_draw_count += 1;
-
-        let coord = Pos2::new(point.0 as f32, point.1 as f32) * zoom;
-        let coord = coord + center.to_vec2();
-        //let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-        //let rect = rect.translate(center.to_vec2());
-
-        painter.circle_filled(coord, 2.0, Color32::GREEN);
-    }*/
 
     let to_coord = |point: (u64, u64)| -> Pos2 {
         let coord = Pos2::new(point.0 as f32, point.1 as f32) * zoom;
@@ -472,7 +359,6 @@ fn draw_range_border(
     }
 }
 
-
 fn draw_range_border_secondary_temp(
     //hex_app: &mut HexApp,
     painter: &Painter,
@@ -482,8 +368,6 @@ fn draw_range_border_secondary_temp(
     zoom: f32,
 ) {
     let mut points = HashSet::new();
-
-    //let mut range_border = RangeBorder::default();
 
     let mut include_block = |index: u64, count: u64| {
         let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
@@ -505,13 +389,9 @@ fn draw_range_border_secondary_temp(
                 points.insert(vertex)
             };
         }
-
-        //range_border.add_rect(y_min, x_min, y_max, x_max);
     };
 
-    for (index, count, rect) in range_blocks
-    //selection_range_blocks(selected_index as u64,u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns)),
-    {
+    for (index, count, rect) in range_blocks {
         include_block(index, count);
 
         //hex_app.rect_draw_count += 1;
@@ -528,31 +408,4 @@ fn draw_range_border_secondary_temp(
 
         painter.circle_filled(coord, 2.0, Color32::GREEN);
     }
-/*
-    let to_coord = |point: (u64, u64)| -> Pos2 {
-        let coord = Pos2::new(point.0 as f32, point.1 as f32) * zoom;
-        coord + center.to_vec2()
-    };
-
-    let mut loops_iter = LoopsIter::new(range_border.edges);
-
-    while let Some(loop_iter) = loops_iter.next() {
-        for (edge, next_edge) in LoopPairIter::new(loop_iter) {
-            assert_eq!(edge.end, next_edge.start);
-
-            let vec0 = to_coord(edge.end) - to_coord(edge.start);
-            let vec1 = to_coord(next_edge.end) - to_coord(next_edge.start);
-
-            let bound_size = (vec0 + vec1).abs();
-            let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size);
-
-            let rect = Rect::from_two_pos(to_coord(edge.start), to_coord(next_edge.end));
-            //hex_app.rect_draw_count += 1;
-            painter.with_clip_rect(clip_rect).rect_stroke(
-                rect.shrink(1.0),
-                10.0,
-                Stroke::new(2.0, Color32::BLACK),
-            );
-        }
-    }*/
 }
