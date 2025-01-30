@@ -274,6 +274,26 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
+        let to_coord = |point: (u64, u64)| -> Pos2 {
+            let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
+            coord + center.to_vec2()
+        };
+        let draw_rounded_corner = |start: (u64, u64), corner: (u64, u64), end: (u64, u64)| {
+            let vec0 = to_coord(corner) - to_coord(start);
+            let vec1 = to_coord(end) - to_coord(corner);
+
+            let bound_size = (vec0 + vec1).abs();
+            let clip_rect = Rect::from_center_size(to_coord(corner), bound_size);
+
+            let rect = Rect::from_two_pos(to_coord(start), to_coord(end));
+            hex_app.rect_draw_count += 1;
+            painter.with_clip_rect(clip_rect).rect_stroke(
+                rect.shrink(1.0),
+                10.0,
+                Stroke::new(2.0, Color32::BLACK),
+            );
+        };
+
         if let Some(selected_index) = hex_app.selected_index {
             draw_range_border_secondary_temp(
                 //hex_app,
@@ -287,15 +307,12 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 hex_app.zoom,
             );
             draw_range_border(
-                //hex_app,
-                &painter,
                 selection_range_blocks(
                     selected_index as u64,
                     u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
                 ),
                 sub_block_sqrt,
-                center,
-                hex_app.zoom,
+                draw_rounded_corner,
             );
         }
     }
@@ -310,11 +327,9 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 }
 
 fn draw_range_border(
-    painter: &Painter,
     range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
     sub_block_sqrt: u64,
-    center: Pos2,
-    zoom: f32,
+    mut draw_corner: impl FnMut((u64, u64), (u64, u64), (u64, u64)),
 ) {
     let mut range_border = RangeBorder::default();
 
@@ -331,30 +346,12 @@ fn draw_range_border(
         include_block(index, count);
     }
 
-    let to_coord = |point: (u64, u64)| -> Pos2 {
-        let coord = Pos2::new(point.0 as f32, point.1 as f32) * zoom;
-        coord + center.to_vec2()
-    };
-
     let mut loops_iter = LoopsIter::new(range_border.edges);
 
     while let Some(loop_iter) = loops_iter.next() {
         for (edge, next_edge) in LoopPairIter::new(loop_iter) {
             assert_eq!(edge.end, next_edge.start);
-
-            let vec0 = to_coord(edge.end) - to_coord(edge.start);
-            let vec1 = to_coord(next_edge.end) - to_coord(next_edge.start);
-
-            let bound_size = (vec0 + vec1).abs();
-            let clip_rect = Rect::from_center_size(to_coord(edge.end), bound_size);
-
-            let rect = Rect::from_two_pos(to_coord(edge.start), to_coord(next_edge.end));
-            //hex_app.rect_draw_count += 1;
-            painter.with_clip_rect(clip_rect).rect_stroke(
-                rect.shrink(1.0),
-                10.0,
-                Stroke::new(2.0, Color32::BLACK),
-            );
+            draw_corner(edge.start, edge.end, next_edge.end);
         }
     }
 }
