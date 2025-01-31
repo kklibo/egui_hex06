@@ -53,6 +53,41 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
     let center = painter.clip_rect().center() + hex_app.pan;
 
+    let to_coord = |point: CellCoords| -> Pos2 {
+        let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
+        coord + center.to_vec2()
+    };
+    let draw_rounded_box2 = |top_left: CellCoords, bottom_right: CellCoords| {
+        let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+        //hex_app.rect_draw_count += 1;
+        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::DARK_RED));
+    };
+    let draw_rounded_corner = |start: CellCoords, corner: CellCoords, end: CellCoords| {
+        let vec0 = to_coord(corner) - to_coord(start);
+        let vec1 = to_coord(end) - to_coord(corner);
+
+        let bound_size = (vec0 + vec1).abs();
+        let clip_rect = Rect::from_center_size(to_coord(corner), bound_size);
+
+        let rect = Rect::from_two_pos(to_coord(start), to_coord(end));
+        hex_app.rect_draw_count += 1;
+        painter.with_clip_rect(clip_rect).rect_stroke(
+            rect.shrink(1.0),
+            10.0,
+            Stroke::new(2.0, Color32::BLACK),
+        );
+    };
+    let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords| {
+        let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+        //hex_app.rect_draw_count += 1;
+        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
+    };
+    let draw_point_circle = |point: CellCoords| {
+        let coord = to_coord(point);
+        //hex_app.rect_draw_count += 1;
+        painter.circle_filled(coord, 2.0, Color32::GREEN);
+    };
+
     let data = match hex_app.active_file {
         WhichFile::File0 => &hex_app.pattern0,
         WhichFile::File1 => &hex_app.pattern1,
@@ -81,16 +116,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             "max_recursion_level: {}, rendered_recursion_level: {}",
             max_recursion_level, rendered_recursion_level
         );
-
-        let to_coord = |point: CellCoords| -> Pos2 {
-            let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
-            coord + center.to_vec2()
-        };
-        let draw_rounded_box2 = |top_left: CellCoords, bottom_right: CellCoords| {
-            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
-            //hex_app.rect_draw_count += 1;
-            painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::DARK_RED));
-        };
 
         let visible_range_blocks_within = |target_recursion_level: u32, index: u64, count: u64| {
             let fn_filter = |index: u64, count: u64| -> bool {
@@ -187,7 +212,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             };
 
-            hex_app.rect_draw_count += 1;
+            //hex_app.rect_draw_count += 1;
             painter.rect_filled(rect, 10.0, fill_color);
 
             let diff_text = if let Some(diff_bytes) = diff_bytes {
@@ -230,7 +255,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
         if rendered_recursion_level < max_recursion_level {
             for (_index, _count, rect) in visible_range_blocks(rendered_recursion_level + 1) {
-                hex_app.rect_draw_count += 1;
+                //hex_app.rect_draw_count += 1;
                 painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::BLACK));
             }
         }
@@ -249,7 +274,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     );
 
                 if let Some((index, count, rect)) = contains_selected_index {
-                    hex_app.rect_draw_count += 1;
+                    //hex_app.rect_draw_count += 1;
                     painter.rect_filled(
                         rect,
                         10.0,
@@ -269,37 +294,11 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             if let Some(selected_index) = hex_app.selected_index {
                 if index <= selected_index as u64 && (selected_index as u64) < index + count {
                     hex_app.selected_range_block = Some((index, count));
-                    hex_app.rect_draw_count += 1;
+                    //hex_app.rect_draw_count += 1;
                     painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::WHITE));
                 }
             }
         }
-
-        let draw_rounded_corner = |start: CellCoords, corner: CellCoords, end: CellCoords| {
-            let vec0 = to_coord(corner) - to_coord(start);
-            let vec1 = to_coord(end) - to_coord(corner);
-
-            let bound_size = (vec0 + vec1).abs();
-            let clip_rect = Rect::from_center_size(to_coord(corner), bound_size);
-
-            let rect = Rect::from_two_pos(to_coord(start), to_coord(end));
-            hex_app.rect_draw_count += 1;
-            painter.with_clip_rect(clip_rect).rect_stroke(
-                rect.shrink(1.0),
-                10.0,
-                Stroke::new(2.0, Color32::BLACK),
-            );
-        };
-        let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords| {
-            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
-            //hex_app.rect_draw_count += 1;
-            painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
-        };
-        let draw_point_circle = |point: CellCoords| {
-            let coord = to_coord(point);
-            //hex_app.rect_draw_count += 1;
-            painter.circle_filled(coord, 2.0, Color32::GREEN);
-        };
 
         if let Some(selected_index) = hex_app.selected_index {
             let count = u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns);
