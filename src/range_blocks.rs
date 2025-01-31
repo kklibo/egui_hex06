@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use egui::{Pos2, Rect};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CellCoords {
     pub x: u64,
@@ -25,16 +23,6 @@ pub fn get_cell_offset(index: u64, sub_block_sqrt: u64) -> CellCoords {
     }
 
     CellCoords { x, y }
-}
-
-pub fn range_block_rect(index: u64, count: u64, sub_block_sqrt: u64, cell_width: f32) -> Rect {
-    let cell_coords = get_cell_offset(index, sub_block_sqrt);
-    let min = Pos2::new(cell_coords.x as f32, cell_coords.y as f32) * cell_width;
-
-    let cell_coords = get_cell_offset(index + count - 1, sub_block_sqrt);
-    let max = Pos2::new((cell_coords.x + 1) as f32, (cell_coords.y + 1) as f32) * cell_width;
-
-    Rect::from_min_max(min, max)
 }
 
 pub fn range_block_corners(

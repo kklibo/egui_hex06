@@ -4,7 +4,7 @@ use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
 };
 use crate::range_blocks::{
-    max_recursion_level, range_block_corners, range_block_rect, Cacheable, CellCoords,
+    max_recursion_level, range_block_corners, Cacheable, CellCoords,
     CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
 };
 use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
@@ -51,9 +51,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     hex_app.rect_draw_count = 1;
     painter.rect_filled(painter.clip_rect(), 10.0, Color32::GRAY);
 
-    let center = painter.clip_rect().center() + hex_app.pan;
-
     let to_coord = |point: CellCoords| -> Pos2 {
+        let center = painter.clip_rect().center() + hex_app.pan;
         let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
         coord + center.to_vec2()
     };
@@ -153,8 +152,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         );
 
         let is_visible = |index: u64, count: u64| {
-            let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-            let rect = rect.translate(center.to_vec2());
+            let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
+            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
 
             painter.clip_rect().intersects(rect)
         };
