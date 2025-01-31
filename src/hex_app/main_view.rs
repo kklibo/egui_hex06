@@ -131,13 +131,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 sub_block_sqrt,
             );
 
-            range_block_iterator
-                .map(|(index, count)| {
-                    let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-                    let rect = rect.translate(center.to_vec2());
-                    (index, count, rect)
-                })
-                .filter(move |&(index, count, _rect)| fn_filter(index, count))
+            range_block_iterator.filter(move |&(index, count)| fn_filter(index, count))
         };
 
         let visible_range_blocks = |target_recursion_level: u32| {
@@ -340,13 +334,13 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 }
 
 fn draw_range_border(
-    range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
+    range_blocks: impl Iterator<Item = (u64, u64)>,
     sub_block_sqrt: u64,
     mut draw_corner: impl FnMut(CellCoords, CellCoords, CellCoords),
 ) {
     let mut range_border = RangeBorder::default();
 
-    for (index, count, _) in range_blocks {
+    for (index, count) in range_blocks {
         let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
         range_border.add_rect(top_left, bottom_right);
     }
@@ -362,24 +356,24 @@ fn draw_range_border(
 }
 
 fn draw_range_boxes(
-    range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
+    range_blocks: impl Iterator<Item = (u64, u64)>,
     sub_block_sqrt: u64,
     mut draw_box: impl FnMut(CellCoords, CellCoords),
 ) {
-    for (index, count, _) in range_blocks {
+    for (index, count) in range_blocks {
         let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
         draw_box(top_left, bottom_right);
     }
 }
 
 fn draw_range_border_corners(
-    range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
+    range_blocks: impl Iterator<Item = (u64, u64)>,
     sub_block_sqrt: u64,
     mut draw_point: impl FnMut(CellCoords),
 ) {
     let mut points = HashSet::new();
 
-    for (index, count, _) in range_blocks {
+    for (index, count) in range_blocks {
         let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
 
         let top_right = CellCoords {
