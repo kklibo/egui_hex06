@@ -296,13 +296,15 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                         },
                     );
 
-                if let Some((index, count, rect)) = contains_selected_index {
-                    //hex_app.rect_draw_count += 1;
-                    painter.rect_filled(
-                        rect,
-                        10.0,
+                if let Some((index, count, _rect)) = contains_selected_index {
+                    let (top_left, bottom_right) =
+                        range_block_corners(index, count, sub_block_sqrt);
+                    draw_rounded_filled_box(
+                        top_left,
+                        bottom_right,
                         Color32::from_rgba_unmultiplied(128, 128, 128, 192),
                     );
+
                     // Constrain search to this range block.
                     search_index = index;
                     search_count = count;
