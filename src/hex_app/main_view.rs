@@ -51,19 +51,19 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     hex_app.rect_draw_count = 1;
     painter.rect_filled(painter.clip_rect(), 10.0, Color32::GRAY);
 
-    let to_coord = |point: CellCoords| -> Pos2 {
+    let painter_coords = |point: CellCoords| -> Pos2 {
         let center = painter.clip_rect().center() + hex_app.pan;
         let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
         coord + center.to_vec2()
     };
     let draw_rounded_corner = |start: CellCoords, corner: CellCoords, end: CellCoords| {
-        let vec0 = to_coord(corner) - to_coord(start);
-        let vec1 = to_coord(end) - to_coord(corner);
+        let vec0 = painter_coords(corner) - painter_coords(start);
+        let vec1 = painter_coords(end) - painter_coords(corner);
 
         let bound_size = (vec0 + vec1).abs();
-        let clip_rect = Rect::from_center_size(to_coord(corner), bound_size);
+        let clip_rect = Rect::from_center_size(painter_coords(corner), bound_size);
 
-        let rect = Rect::from_two_pos(to_coord(start), to_coord(end));
+        let rect = Rect::from_two_pos(painter_coords(start), painter_coords(end));
         hex_app.rect_draw_count += 1;
         painter.with_clip_rect(clip_rect).rect_stroke(
             rect.shrink(1.0),
@@ -74,11 +74,11 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
     let draw_rounded_filled_box =
         |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
-            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
             painter.rect_filled(rect, 10.0, color);
         };
     let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
-        let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+        let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
         //hex_app.rect_draw_count += 1;
         painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, color));
     };
@@ -95,13 +95,13 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         draw_rounded_box(top_left, bottom_right, Color32::BLACK);
     };
     let draw_point_circle = |point: CellCoords| {
-        let coord = to_coord(point);
+        let coord = painter_coords(point);
         //hex_app.rect_draw_count += 1;
         painter.circle_filled(coord, 2.0, Color32::GREEN);
     };
     let draw_cell_text =
         |top_left: CellCoords, bottom_right: CellCoords, color: Color32, text: &str| {
-            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
             painter.text(
                 rect.center(),
                 Align2::CENTER_CENTER,
@@ -112,7 +112,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
     let draw_centered_text =
         |top_left: CellCoords, bottom_right: CellCoords, color: Color32, text: &str| {
-            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
             painter.text(
                 rect.center(),
                 Align2::CENTER_CENTER,
@@ -153,7 +153,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
         let is_visible = |index: u64, count: u64| {
             let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
-            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
 
             painter.clip_rect().intersects(rect)
         };
@@ -213,7 +213,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             };
 
             let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
-            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
 
             let fill_color = if response.clicked()
                 && response
