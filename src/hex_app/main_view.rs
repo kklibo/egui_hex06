@@ -4,8 +4,9 @@ use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
 };
 use crate::range_blocks::{
-    get_cell_offset, max_recursion_level, range_block_rect, Cacheable,
-    CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
+    get_cell_offset, max_recursion_level, range_block_corners, range_block_rect, Cacheable,
+    CellCoords, CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator,
+    RangeBlockSum,
 };
 use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
 use egui::{Align2, Color32, Context, FontId, Painter, Pos2, Rect, Sense, Stroke, Ui, Vec2};
@@ -333,17 +334,9 @@ fn draw_range_border(
 ) {
     let mut range_border = RangeBorder::default();
 
-    let mut include_block = |index: u64, count: u64| {
-        let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
-        let (x_max, y_max) = get_cell_offset(index + count - 1, sub_block_sqrt);
-        let x_max = x_max + 1;
-        let y_max = y_max + 1;
-
-        range_border.add_rect(y_min, x_min, y_max, x_max);
-    };
-
-    for (index, count, _rect) in range_blocks {
-        include_block(index, count);
+    for (index, count, _) in range_blocks {
+        let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
+        range_border.add_rect(top_left.y, top_left.x, bottom_right.y, bottom_right.x);
     }
 
     let mut loops_iter = LoopsIter::new(range_border.edges);
@@ -367,8 +360,8 @@ fn draw_range_border_secondary_temp(
     let mut points = HashSet::new();
 
     let mut include_block = |index: u64, count: u64| {
-        let (x_min, y_min) = get_cell_offset(index, sub_block_sqrt);
-        let (x_max, y_max) = get_cell_offset(index + count - 1, sub_block_sqrt);
+        let CellCoords { x: x_min, y: y_min } = get_cell_offset(index, sub_block_sqrt);
+        let CellCoords { x: x_max, y: y_max } = get_cell_offset(index + count - 1, sub_block_sqrt);
         let x_max = x_max + 1;
         let y_max = y_max + 1;
 
