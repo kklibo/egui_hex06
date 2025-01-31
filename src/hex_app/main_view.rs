@@ -72,6 +72,12 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             Stroke::new(2.0, Color32::BLACK),
         );
     };
+
+    let draw_rounded_filled_box =
+        |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
+            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            painter.rect_filled(rect, 10.0, color);
+        };
     let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
         let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
         //hex_app.rect_draw_count += 1;
@@ -219,8 +225,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             };
 
-            //hex_app.rect_draw_count += 1;
-            painter.rect_filled(rect, 10.0, fill_color);
+            let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
+            draw_rounded_filled_box(top_left, bottom_right, fill_color);
 
             let diff_text = if let Some(diff_bytes) = diff_bytes {
                 format!("\n{}", diff_bytes as f32 / count as f32)
