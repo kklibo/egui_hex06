@@ -4,12 +4,11 @@ use crate::hex_app::{
     byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
 };
 use crate::range_blocks::{
-    get_cell_offset, max_recursion_level, range_block_corners, range_block_rect, Cacheable,
-    CellCoords, CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator,
-    RangeBlockSum,
+    max_recursion_level, range_block_corners, range_block_rect, Cacheable, CellCoords,
+    CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
 };
 use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
-use egui::{Align2, Color32, Context, FontId, Painter, Pos2, Rect, Sense, Stroke, Ui, Vec2};
+use egui::{Align2, Color32, Context, FontId, Pos2, Rect, Sense, Stroke, Ui, Vec2};
 
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     hex_app.selected_range_block = None; // Reset selected range block (should this be done some other way?)
@@ -299,18 +298,20 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             //hex_app.rect_draw_count += 1;
             painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
         };
+        let draw_point_circle = |point: CellCoords| {
+            let coord = to_coord(point);
+            //hex_app.rect_draw_count += 1;
+            painter.circle_filled(coord, 2.0, Color32::GREEN);
+        };
 
         if let Some(selected_index) = hex_app.selected_index {
-            draw_range_border_secondary_temp(
-                //hex_app,
-                &painter,
+            draw_range_border_corners(
                 selection_range_blocks(
                     selected_index as u64,
                     u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
                 ),
                 sub_block_sqrt,
-                center,
-                hex_app.zoom,
+                draw_point_circle,
             );
 
             draw_range_boxes(
@@ -375,28 +376,26 @@ fn draw_range_boxes(
     }
 }
 
-fn draw_range_border_secondary_temp(
-    //hex_app: &mut HexApp,
-    painter: &Painter,
+fn draw_range_border_corners(
     range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
     sub_block_sqrt: u64,
-    center: Pos2,
-    zoom: f32,
+    mut draw_point: impl FnMut(CellCoords),
 ) {
     let mut points = HashSet::new();
 
-    let mut include_block = |index: u64, count: u64| {
-        let CellCoords { x: x_min, y: y_min } = get_cell_offset(index, sub_block_sqrt);
-        let CellCoords { x: x_max, y: y_max } = get_cell_offset(index + count - 1, sub_block_sqrt);
-        let x_max = x_max + 1;
-        let y_max = y_max + 1;
+    for (index, count, _) in range_blocks {
+        let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
 
-        let vertices = [
-            (x_min, y_min),
-            (x_max, y_min),
-            (x_max, y_max),
-            (x_min, y_max),
-        ];
+        let top_right = CellCoords {
+            x: bottom_right.x,
+            y: top_left.y,
+        };
+        let bottom_left = CellCoords {
+            x: top_left.x,
+            y: bottom_right.y,
+        };
+
+        let vertices = [top_left, top_right, bottom_right, bottom_left];
 
         for vertex in vertices {
             if points.contains(&vertex) {
@@ -405,20 +404,9 @@ fn draw_range_border_secondary_temp(
                 points.insert(vertex)
             };
         }
-    };
-
-    for (index, count, rect) in range_blocks {
-        include_block(index, count);
     }
 
     for point in points {
-        //hex_app.rect_draw_count += 1;
-
-        let coord = Pos2::new(point.0 as f32, point.1 as f32) * zoom;
-        let coord = coord + center.to_vec2();
-        //let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-        //let rect = rect.translate(center.to_vec2());
-
-        painter.circle_filled(coord, 2.0, Color32::GREEN);
+        draw_point(point);
     }
 }
