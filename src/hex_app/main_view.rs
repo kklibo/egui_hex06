@@ -100,6 +100,28 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         //hex_app.rect_draw_count += 1;
         painter.circle_filled(coord, 2.0, Color32::GREEN);
     };
+    let draw_cell_text =
+        |top_left: CellCoords, bottom_right: CellCoords, color: Color32, text: &str| {
+            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            painter.text(
+                rect.center(),
+                Align2::CENTER_CENTER,
+                text,
+                FontId::monospace(hex_app.zoom * 0.75),
+                color,
+            );
+        };
+    let draw_centered_text =
+        |top_left: CellCoords, bottom_right: CellCoords, color: Color32, text: &str| {
+            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            painter.text(
+                rect.center(),
+                Align2::CENTER_CENTER,
+                text,
+                FontId::default(),
+                color,
+            );
+        };
 
     let data = match hex_app.active_file {
         WhichFile::File0 => &hex_app.pattern0,
@@ -176,7 +198,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             visible_range_blocks_within(target_recursion_level, 0, data_len)
         };
 
-        for (index, count, rect) in visible_range_blocks(rendered_recursion_level) {
+        for (index, count, _) in visible_range_blocks(rendered_recursion_level) {
             if index + count > data_len {
                 // Final incomplete range block
                 if let Some(count) = data_len.checked_sub(index) {
@@ -204,6 +226,9 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 None
             };
 
+            let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
+            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+
             let fill_color = if response.clicked()
                 && response
                     .interact_pointer_pos()
@@ -225,7 +250,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             };
 
-            let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
             draw_rounded_filled_box(top_left, bottom_right, fill_color);
 
             let diff_text = if let Some(diff_bytes) = diff_bytes {
@@ -245,24 +269,10 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     }
                     .to_string(),
                 };
-
-                painter.text(
-                    rect.center(),
-                    Align2::CENTER_CENTER,
-                    display_text,
-                    FontId::monospace(hex_app.zoom * 0.75),
-                    contrast(fill_color),
-                );
+                draw_cell_text(top_left, bottom_right, contrast(fill_color), &display_text);
             } else {
                 let text = format!("0x{:08X}\n{} bytes\n{}", index, count, diff_text);
-                let text_pos = rect.center();
-                painter.text(
-                    text_pos,
-                    Align2::CENTER_CENTER,
-                    text,
-                    FontId::default(),
-                    contrast(fill_color),
-                );
+                draw_centered_text(top_left, bottom_right, contrast(fill_color), &text);
             }
         }
 
