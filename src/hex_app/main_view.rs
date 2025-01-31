@@ -160,20 +160,14 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 painter.clip_rect().intersects(rect)
             };
 
-            let range_block_iterator = RangeBlockIterator::new(
+            RangeBlockIterator::new(
                 index,
                 index + count,
                 target_recursion_level,
                 max_recursion_level,
                 sub_block_sqrt,
                 fn_filter,
-            );
-
-            range_block_iterator.map(|(index, count)| {
-                let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-                let rect = rect.translate(center.to_vec2());
-                (index, count, rect)
-            })
+            )
         };
 
         let selection_range_blocks = |index: u64, count: u64| {
@@ -198,7 +192,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             visible_range_blocks_within(target_recursion_level, 0, data_len)
         };
 
-        for (index, count, _) in visible_range_blocks(rendered_recursion_level) {
+        for (index, count) in visible_range_blocks(rendered_recursion_level) {
             if index + count > data_len {
                 // Final incomplete range block
                 if let Some(count) = data_len.checked_sub(index) {
@@ -277,7 +271,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         }
 
         if rendered_recursion_level < max_recursion_level {
-            for (index, count, _) in visible_range_blocks(rendered_recursion_level + 1) {
+            for (index, count) in visible_range_blocks(rendered_recursion_level + 1) {
                 let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
                 draw_rounded_box4(top_left, bottom_right);
             }
@@ -291,12 +285,10 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             for recursion_level in (0..rendered_recursion_level).rev() {
                 let contains_selected_index =
                     visible_range_blocks_within(recursion_level, search_index, search_count).find(
-                        |&(index, count, _rect)| {
-                            index <= selected_index && selected_index < index + count
-                        },
+                        |&(index, count)| index <= selected_index && selected_index < index + count,
                     );
 
-                if let Some((index, count, _rect)) = contains_selected_index {
+                if let Some((index, count)) = contains_selected_index {
                     let (top_left, bottom_right) =
                         range_block_corners(index, count, sub_block_sqrt);
                     draw_rounded_filled_box(
@@ -315,7 +307,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
-        for (index, count, _) in visible_range_blocks(rendered_recursion_level) {
+        for (index, count) in visible_range_blocks(rendered_recursion_level) {
             if let Some(selected_index) = hex_app.selected_index {
                 if index <= selected_index as u64 && (selected_index as u64) < index + count {
                     hex_app.selected_range_block = Some((index, count));
