@@ -305,29 +305,22 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
 
         if let Some(selected_index) = hex_app.selected_index {
+            let count = u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns);
+
             draw_range_border_corners(
-                selection_range_blocks(
-                    selected_index as u64,
-                    u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
-                ),
+                selection_range_blocks(selected_index as u64, count),
                 sub_block_sqrt,
                 draw_point_circle,
             );
 
             draw_range_boxes(
-                selection_range_blocks(
-                    selected_index as u64,
-                    u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
-                ),
+                selection_range_blocks(selected_index as u64, count),
                 sub_block_sqrt,
                 draw_rounded_box,
             );
 
             draw_range_border(
-                selection_range_blocks(
-                    selected_index as u64,
-                    u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
-                ),
+                selection_range_blocks(selected_index as u64, count),
                 sub_block_sqrt,
                 draw_rounded_corner,
             );
