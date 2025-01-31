@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::range_blocks::CellCoords;
+
 #[derive(Default)]
 pub struct RangeBorder {
     next_edge_id: usize,
@@ -10,17 +12,26 @@ pub struct RangeBorder {
 pub struct Edge {
     pub id: usize,
     pub next: usize,
-    pub start: (u64, u64),
-    pub end: (u64, u64),
+    pub start: CellCoords,
+    pub end: CellCoords,
 }
 
 impl RangeBorder {
-    pub fn add_rect(&mut self, top: u64, left: u64, bottom: u64, right: u64) {
+    pub fn add_rect(&mut self, top_left: CellCoords, bottom_right: CellCoords) {
+        let top_right = CellCoords {
+            x: bottom_right.x,
+            y: top_left.y,
+        };
+        let bottom_left = CellCoords {
+            x: top_left.x,
+            y: bottom_right.y,
+        };
+
         let id = self.next_edge_id;
-        self.add_edge(id, id + 1, (left, top), (right, top));
-        self.add_edge(id + 1, id + 2, (right, top), (right, bottom));
-        self.add_edge(id + 2, id + 3, (right, bottom), (left, bottom));
-        self.add_edge(id + 3, id, (left, bottom), (left, top));
+        self.add_edge(id, id + 1, top_left, top_right);
+        self.add_edge(id + 1, id + 2, top_right, bottom_right);
+        self.add_edge(id + 2, id + 3, bottom_right, bottom_left);
+        self.add_edge(id + 3, id, bottom_left, top_left);
         self.next_edge_id += 4;
     }
 
@@ -28,23 +39,23 @@ impl RangeBorder {
         &mut self,
         mut id: usize,
         mut next: usize,
-        mut start: (u64, u64),
-        mut end: (u64, u64),
+        mut start: CellCoords,
+        mut end: CellCoords,
     ) {
         // Edges must be horizontal or vertical.
-        assert!(start.0 == end.0 || start.1 == end.1);
+        assert!(start.x == end.x || start.y == end.y);
 
         let mut next_edges = Vec::new();
 
         for &edge in &self.edges {
             // If the new edge starts at the end of a collinear edge, merge them.
-            if edge.end == start && (edge.start.0 == end.0 || edge.start.1 == end.1) {
+            if edge.end == start && (edge.start.x == end.x || edge.start.y == end.y) {
                 start = edge.start;
                 id = edge.id;
                 continue;
             }
             // If the new edge ends at the start of a collinear edge, merge them.
-            if end == edge.start && (start.0 == edge.end.0 || start.1 == edge.end.1) {
+            if end == edge.start && (start.x == edge.end.x || start.y == edge.end.y) {
                 end = edge.end;
                 next = edge.next;
                 continue;
@@ -174,12 +185,12 @@ mod tests {
     #[test]
     fn test_perimeter_broken_loop_bug() {
         let mut perimeter = RangeBorder::default();
-        perimeter.add_rect(2, 3, 3, 4);
-        perimeter.add_rect(3, 0, 4, 1);
-        perimeter.add_rect(3, 1, 4, 2);
-        perimeter.add_rect(3, 2, 4, 3);
-        perimeter.add_rect(3, 3, 4, 4);
-        perimeter.add_rect(0, 4, 4, 8);
+        perimeter.add_rect(CellCoords { x: 3, y: 2 }, CellCoords { x: 4, y: 3 });
+        perimeter.add_rect(CellCoords { x: 0, y: 3 }, CellCoords { x: 1, y: 4 });
+        perimeter.add_rect(CellCoords { x: 1, y: 3 }, CellCoords { x: 2, y: 4 });
+        perimeter.add_rect(CellCoords { x: 2, y: 3 }, CellCoords { x: 3, y: 4 });
+        perimeter.add_rect(CellCoords { x: 3, y: 3 }, CellCoords { x: 4, y: 4 });
+        perimeter.add_rect(CellCoords { x: 4, y: 0 }, CellCoords { x: 8, y: 4 });
 
         let mut loops_iter = LoopsIter::new(perimeter.edges);
 

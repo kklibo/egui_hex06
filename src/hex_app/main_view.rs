@@ -275,11 +275,11 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
-        let to_coord = |point: (u64, u64)| -> Pos2 {
-            let coord = Pos2::new(point.0 as f32, point.1 as f32) * hex_app.zoom;
+        let to_coord = |point: CellCoords| -> Pos2 {
+            let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
             coord + center.to_vec2()
         };
-        let draw_rounded_corner = |start: (u64, u64), corner: (u64, u64), end: (u64, u64)| {
+        let draw_rounded_corner = |start: CellCoords, corner: CellCoords, end: CellCoords| {
             let vec0 = to_coord(corner) - to_coord(start);
             let vec1 = to_coord(end) - to_coord(corner);
 
@@ -330,13 +330,13 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 fn draw_range_border(
     range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
     sub_block_sqrt: u64,
-    mut draw_corner: impl FnMut((u64, u64), (u64, u64), (u64, u64)),
+    mut draw_corner: impl FnMut(CellCoords, CellCoords, CellCoords),
 ) {
     let mut range_border = RangeBorder::default();
 
     for (index, count, _) in range_blocks {
         let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
-        range_border.add_rect(top_left.y, top_left.x, bottom_right.y, bottom_right.x);
+        range_border.add_rect(top_left, bottom_right);
     }
 
     let mut loops_iter = LoopsIter::new(range_border.edges);
