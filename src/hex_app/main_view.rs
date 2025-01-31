@@ -152,32 +152,25 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             max_recursion_level, rendered_recursion_level
         );
 
+        let is_visible = |index: u64, count: u64| {
+            let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
+            let rect = rect.translate(center.to_vec2());
+
+            painter.clip_rect().intersects(rect)
+        };
+
         let visible_range_blocks_within = |target_recursion_level: u32, index: u64, count: u64| {
-            let fn_filter = |index: u64, count: u64| -> bool {
-                let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-                let rect = rect.translate(center.to_vec2());
-
-                painter.clip_rect().intersects(rect)
-            };
-
             RangeBlockIterator::new(
                 index,
                 index + count,
                 target_recursion_level,
                 max_recursion_level,
                 sub_block_sqrt,
-                fn_filter,
+                is_visible,
             )
         };
 
         let selection_range_blocks = |index: u64, count: u64| {
-            let fn_filter = |index: u64, count: u64| -> bool {
-                let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
-                let rect = rect.translate(center.to_vec2());
-
-                painter.clip_rect().intersects(rect)
-            };
-
             let range_block_iterator = CompleteLargestRangeBlockIterator::new(
                 index,
                 index + count,
@@ -185,7 +178,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 sub_block_sqrt,
             );
 
-            range_block_iterator.filter(move |&(index, count)| fn_filter(index, count))
+            range_block_iterator.filter(move |&(index, count)| is_visible(index, count))
         };
 
         let visible_range_blocks = |target_recursion_level: u32| {
