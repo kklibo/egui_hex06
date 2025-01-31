@@ -294,6 +294,11 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 Stroke::new(2.0, Color32::BLACK),
             );
         };
+        let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords| {
+            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            //hex_app.rect_draw_count += 1;
+            painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
+        };
 
         if let Some(selected_index) = hex_app.selected_index {
             draw_range_border_secondary_temp(
@@ -307,6 +312,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 center,
                 hex_app.zoom,
             );
+
+            draw_range_boxes(
+                selection_range_blocks(
+                    selected_index as u64,
+                    u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns),
+                ),
+                sub_block_sqrt,
+                draw_rounded_box,
+            );
+
             draw_range_border(
                 selection_range_blocks(
                     selected_index as u64,
@@ -349,6 +364,17 @@ fn draw_range_border(
     }
 }
 
+fn draw_range_boxes(
+    range_blocks: impl Iterator<Item = (u64, u64, Rect)>,
+    sub_block_sqrt: u64,
+    mut draw_box: impl FnMut(CellCoords, CellCoords),
+) {
+    for (index, count, _) in range_blocks {
+        let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
+        draw_box(top_left, bottom_right);
+    }
+}
+
 fn draw_range_border_secondary_temp(
     //hex_app: &mut HexApp,
     painter: &Painter,
@@ -383,9 +409,6 @@ fn draw_range_border_secondary_temp(
 
     for (index, count, rect) in range_blocks {
         include_block(index, count);
-
-        //hex_app.rect_draw_count += 1;
-        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
     }
 
     for point in points {
