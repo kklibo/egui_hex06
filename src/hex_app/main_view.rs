@@ -82,6 +82,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             max_recursion_level, rendered_recursion_level
         );
 
+        let to_coord = |point: CellCoords| -> Pos2 {
+            let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
+            coord + center.to_vec2()
+        };
+        let draw_rounded_box2 = |top_left: CellCoords, bottom_right: CellCoords| {
+            let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
+            //hex_app.rect_draw_count += 1;
+            painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::DARK_RED));
+        };
+
         let visible_range_blocks_within = |target_recursion_level: u32, index: u64, count: u64| {
             let fn_filter = |index: u64, count: u64| -> bool {
                 let rect = range_block_rect(index, count, sub_block_sqrt, hex_app.zoom);
@@ -138,14 +148,11 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             if index + count > data_len {
                 // Final incomplete range block
                 if let Some(count) = data_len.checked_sub(index) {
-                    for (_index, _count, rect) in selection_range_blocks(index, count) {
-                        hex_app.rect_draw_count += 1;
-                        painter.rect_stroke(
-                            rect.shrink(1.0),
-                            10.0,
-                            Stroke::new(2.0, Color32::DARK_RED),
-                        );
-                    }
+                    draw_range_boxes(
+                        selection_range_blocks(index, count),
+                        sub_block_sqrt,
+                        draw_rounded_box2,
+                    );
                 } else {
                     // This should be impossible.
                     log::error!("index > data_len");
@@ -274,10 +281,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
-        let to_coord = |point: CellCoords| -> Pos2 {
-            let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
-            coord + center.to_vec2()
-        };
         let draw_rounded_corner = |start: CellCoords, corner: CellCoords, end: CellCoords| {
             let vec0 = to_coord(corner) - to_coord(start);
             let vec1 = to_coord(end) - to_coord(corner);
