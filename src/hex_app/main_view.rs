@@ -72,25 +72,22 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             Stroke::new(2.0, Color32::BLACK),
         );
     };
-    let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords| {
+    let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
         let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
         //hex_app.rect_draw_count += 1;
-        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::GOLD));
+        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, color));
+    };
+    let draw_rounded_box1 = |top_left: CellCoords, bottom_right: CellCoords| {
+        draw_rounded_box(top_left, bottom_right, Color32::GOLD);
     };
     let draw_rounded_box2 = |top_left: CellCoords, bottom_right: CellCoords| {
-        let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
-        //hex_app.rect_draw_count += 1;
-        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::DARK_RED));
+        draw_rounded_box(top_left, bottom_right, Color32::DARK_RED);
     };
     let draw_rounded_box3 = |top_left: CellCoords, bottom_right: CellCoords| {
-        let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
-        //hex_app.rect_draw_count += 1;
-        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::WHITE));
+        draw_rounded_box(top_left, bottom_right, Color32::WHITE);
     };
     let draw_rounded_box4 = |top_left: CellCoords, bottom_right: CellCoords| {
-        let rect = Rect::from_two_pos(to_coord(top_left), to_coord(bottom_right));
-        //hex_app.rect_draw_count += 1;
-        painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, Color32::BLACK));
+        draw_rounded_box(top_left, bottom_right, Color32::BLACK);
     };
     let draw_point_circle = |point: CellCoords| {
         let coord = to_coord(point);
@@ -324,7 +321,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             draw_range_boxes(
                 selection_range_blocks(selected_index as u64, count),
                 sub_block_sqrt,
-                draw_rounded_box,
+                draw_rounded_box1,
             );
 
             draw_range_border(
