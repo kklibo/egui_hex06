@@ -32,6 +32,10 @@ fn random_pattern(len: usize) -> Vec<u8> {
     (0..len).map(|_| rng.gen_range(0..=255)).collect()
 }
 
+pub struct UIConfig {
+    pub range_border_corner_points: bool,
+}
+
 pub struct HexApp {
     source_name0: Option<String>,
     source_name1: Option<String>,
@@ -56,6 +60,8 @@ pub struct HexApp {
     selected_index: Option<usize>,
     selected_range_block: Option<(u64, u64)>,
     rect_draw_count: usize,
+    ui_config_window: bool,
+    ui_config: UIConfig,
 }
 
 impl HexApp {
@@ -96,6 +102,10 @@ impl HexApp {
             selected_index: None,
             selected_range_block: None,
             rect_draw_count: 0,
+            ui_config_window: false,
+            ui_config: UIConfig {
+                range_border_corner_points: true,
+            },
         }
     }
 }
@@ -137,6 +147,15 @@ impl eframe::App for HexApp {
                 }
             }
         });
+
+        Window::new("UI Config")
+            .open(&mut self.ui_config_window)
+            .show(ctx, |ui| {
+                ui.checkbox(
+                    &mut self.ui_config.range_border_corner_points,
+                    "Range border corner points",
+                );
+            });
 
         Window::new("Block info").show(ctx, |ui| {
             if let Some((index, count)) = self.selected_range_block {
