@@ -262,7 +262,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
-        if rendered_recursion_level < max_recursion_level {
+        if hex_app.ui_config.block_group_outline && rendered_recursion_level < max_recursion_level {
             for (index, count) in visible_range_blocks(rendered_recursion_level + 1) {
                 let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
                 draw_rounded_box4(top_left, bottom_right);
@@ -302,14 +302,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
-        for (index, count) in visible_range_blocks(rendered_recursion_level) {
-            if let Some(selected_index) = hex_app.selected_index {
-                if index <= selected_index as u64 && (selected_index as u64) < index + count {
-                    hex_app.selected_range_block = Some((index, count));
+        if hex_app.ui_config.selected_block {
+            for (index, count) in visible_range_blocks(rendered_recursion_level) {
+                if let Some(selected_index) = hex_app.selected_index {
+                    if index <= selected_index as u64 && (selected_index as u64) < index + count {
+                        hex_app.selected_range_block = Some((index, count));
 
-                    let (top_left, bottom_right) =
-                        range_block_corners(index, count, sub_block_sqrt);
-                    draw_rounded_box3(top_left, bottom_right);
+                        let (top_left, bottom_right) =
+                            range_block_corners(index, count, sub_block_sqrt);
+                        draw_rounded_box3(top_left, bottom_right);
+                    }
                 }
             }
         }
@@ -343,10 +345,12 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         }
     }
 
-    if let Some(cursor_pos) = response.hover_pos() {
-        let rect = Rect::from_min_size(cursor_pos, Vec2::splat(10.0));
-        hex_app.rect_draw_count += 1;
-        painter.rect_filled(rect, 0.0, byte_color(0));
+    if hex_app.ui_config.cursor {
+        if let Some(cursor_pos) = response.hover_pos() {
+            let rect = Rect::from_min_size(cursor_pos, Vec2::splat(10.0));
+            hex_app.rect_draw_count += 1;
+            painter.rect_filled(rect, 0.0, byte_color(0));
+        }
     }
 
     ui.expand_to_include_rect(painter.clip_rect());
