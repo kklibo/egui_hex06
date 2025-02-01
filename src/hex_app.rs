@@ -33,7 +33,10 @@ fn random_pattern(len: usize) -> Vec<u8> {
 }
 
 pub struct UIConfig {
-    pub range_border_corner_points: bool,
+    pub selection_boxes: bool,
+    pub selection_border_corner_points: bool,
+    pub selection_border: bool,
+    pub selected_subblock_boxes: bool,
 }
 
 pub struct HexApp {
@@ -104,7 +107,10 @@ impl HexApp {
             rect_draw_count: 0,
             ui_config_window: false,
             ui_config: UIConfig {
-                range_border_corner_points: true,
+                selection_boxes: true,
+                selection_border_corner_points: true,
+                selection_border: true,
+                selected_subblock_boxes: true,
             },
         }
     }
@@ -151,9 +157,15 @@ impl eframe::App for HexApp {
         Window::new("UI Config")
             .open(&mut self.ui_config_window)
             .show(ctx, |ui| {
+                ui.checkbox(&mut self.ui_config.selection_boxes, "Selection boxes");
                 ui.checkbox(
-                    &mut self.ui_config.range_border_corner_points,
-                    "Range border corner points",
+                    &mut self.ui_config.selection_border_corner_points,
+                    "Selection border corner points",
+                );
+                ui.checkbox(&mut self.ui_config.selection_border, "Selection border");
+                ui.checkbox(
+                    &mut self.ui_config.selected_subblock_boxes,
+                    "Selected subblock boxes",
                 );
             });
 

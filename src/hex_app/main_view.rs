@@ -269,32 +269,35 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
-        if let Some(selected_index) = hex_app.selected_index {
-            let selected_index = selected_index as u64;
-            let mut search_index = 0;
-            let mut search_count = data_len;
+        if hex_app.ui_config.selected_subblock_boxes {
+            if let Some(selected_index) = hex_app.selected_index {
+                let selected_index = selected_index as u64;
+                let mut search_index = 0;
+                let mut search_count = data_len;
 
-            for recursion_level in (0..rendered_recursion_level).rev() {
-                let contains_selected_index =
-                    visible_range_blocks_within(recursion_level, search_index, search_count).find(
-                        |&(index, count)| index <= selected_index && selected_index < index + count,
-                    );
+                for recursion_level in (0..rendered_recursion_level).rev() {
+                    let contains_selected_index =
+                        visible_range_blocks_within(recursion_level, search_index, search_count)
+                            .find(|&(index, count)| {
+                                index <= selected_index && selected_index < index + count
+                            });
 
-                if let Some((index, count)) = contains_selected_index {
-                    let (top_left, bottom_right) =
-                        range_block_corners(index, count, sub_block_sqrt);
-                    draw_rounded_filled_box(
-                        top_left,
-                        bottom_right,
-                        Color32::from_rgba_unmultiplied(128, 128, 128, 192),
-                    );
+                    if let Some((index, count)) = contains_selected_index {
+                        let (top_left, bottom_right) =
+                            range_block_corners(index, count, sub_block_sqrt);
+                        draw_rounded_filled_box(
+                            top_left,
+                            bottom_right,
+                            Color32::from_rgba_unmultiplied(128, 128, 128, 192),
+                        );
 
-                    // Constrain search to this range block.
-                    search_index = index;
-                    search_count = count;
-                } else {
-                    // Selected index is off-screen.
-                    break;
+                        // Constrain search to this range block.
+                        search_index = index;
+                        search_count = count;
+                    } else {
+                        // Selected index is off-screen.
+                        break;
+                    }
                 }
             }
         }
@@ -314,7 +317,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         if let Some(selected_index) = hex_app.selected_index {
             let count = u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns);
 
-            if hex_app.ui_config.range_border_corner_points {
+            if hex_app.ui_config.selection_border_corner_points {
                 draw_range_border_corners(
                     selection_range_blocks(selected_index as u64, count),
                     sub_block_sqrt,
@@ -322,17 +325,21 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 );
             }
 
-            draw_range_boxes(
-                selection_range_blocks(selected_index as u64, count),
-                sub_block_sqrt,
-                draw_rounded_box1,
-            );
+            if hex_app.ui_config.selection_boxes {
+                draw_range_boxes(
+                    selection_range_blocks(selected_index as u64, count),
+                    sub_block_sqrt,
+                    draw_rounded_box1,
+                );
+            }
 
-            draw_range_border(
-                selection_range_blocks(selected_index as u64, count),
-                sub_block_sqrt,
-                draw_rounded_corner,
-            );
+            if hex_app.ui_config.selection_border {
+                draw_range_border(
+                    selection_range_blocks(selected_index as u64, count),
+                    sub_block_sqrt,
+                    draw_rounded_corner,
+                );
+            }
         }
     }
 
