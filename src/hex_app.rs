@@ -33,6 +33,9 @@ fn random_pattern(len: usize) -> Vec<u8> {
 }
 
 pub struct UIConfig {
+    pub final_incomplete_block: bool,
+    pub cell_text: bool,
+    pub block_address_text: bool,
     pub block_group_outline: bool,
     pub selection_boxes: bool,
     pub selection_border_corner_points: bool,
@@ -110,6 +113,9 @@ impl HexApp {
             rect_draw_count: 0,
             ui_config_window: false,
             ui_config: UIConfig {
+                final_incomplete_block: true,
+                cell_text: true,
+                block_address_text: true,
                 block_group_outline: true,
                 selection_boxes: true,
                 selection_border_corner_points: true,
@@ -163,6 +169,12 @@ impl eframe::App for HexApp {
         Window::new("UI Config")
             .open(&mut self.ui_config_window)
             .show(ctx, |ui| {
+                ui.checkbox(
+                    &mut self.ui_config.final_incomplete_block,
+                    "Final incomplete block",
+                );
+                ui.checkbox(&mut self.ui_config.cell_text, "Cell text");
+                ui.checkbox(&mut self.ui_config.block_address_text, "Block address text");
                 ui.checkbox(
                     &mut self.ui_config.block_group_outline,
                     "Block group outline",

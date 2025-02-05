@@ -185,7 +185,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
 
         for (index, count) in visible_range_blocks(rendered_recursion_level) {
-            if index + count > data_len {
+            if hex_app.ui_config.final_incomplete_block && index + count > data_len {
                 // Final incomplete range block
                 if let Some(count) = data_len.checked_sub(index) {
                     draw_range_boxes(
@@ -245,18 +245,20 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             };
 
             if rendered_recursion_level == 0 {
-                let byte: u8 = data[usize::try_from(index).expect("temp fix")];
-                let display_text = match hex_app.cell_view_mode {
-                    CellViewMode::Hex => format!("{byte:02X}"),
-                    CellViewMode::Ascii => if byte.is_ascii_graphic() {
-                        byte as char
-                    } else {
-                        '.'
-                    }
-                    .to_string(),
-                };
-                draw_cell_text(top_left, bottom_right, contrast(fill_color), &display_text);
-            } else {
+                if hex_app.ui_config.cell_text {
+                    let byte: u8 = data[usize::try_from(index).expect("temp fix")];
+                    let display_text = match hex_app.cell_view_mode {
+                        CellViewMode::Hex => format!("{byte:02X}"),
+                        CellViewMode::Ascii => if byte.is_ascii_graphic() {
+                            byte as char
+                        } else {
+                            '.'
+                        }
+                        .to_string(),
+                    };
+                    draw_cell_text(top_left, bottom_right, contrast(fill_color), &display_text);
+                }
+            } else if hex_app.ui_config.block_address_text {
                 let text = format!("0x{:08X}\n{} bytes\n{}", index, count, diff_text);
                 draw_centered_text(top_left, bottom_right, contrast(fill_color), &text);
             }
