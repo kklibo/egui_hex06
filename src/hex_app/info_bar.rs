@@ -15,6 +15,9 @@ pub fn info_bar(hex_app: &mut crate::hex_app::HexApp, ui: &mut Ui) {
         }
         ui.separator();
         ui.label(format!("dbg: {}", hex_app.dbg_notes));
-        ui.label(format!("rect_draw_count: {}", hex_app.rect_draw_count));
+        ui.label(format!(
+            "rect_draw_count: {}",
+            hex_app.rect_draw_count.borrow()
+        ));
     });
 }

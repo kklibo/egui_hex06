@@ -48,7 +48,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
     hex_app.pan += response.drag_delta();
 
-    hex_app.rect_draw_count = 1;
+    *hex_app.rect_draw_count.borrow_mut() = 1;
     painter.rect_filled(painter.clip_rect(), 10.0, Color32::GRAY);
 
     let painter_coords = |point: CellCoords| -> Pos2 {
@@ -64,7 +64,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         let clip_rect = Rect::from_center_size(painter_coords(corner), bound_size);
 
         let rect = Rect::from_two_pos(painter_coords(start), painter_coords(end));
-        hex_app.rect_draw_count += 1;
+        *hex_app.rect_draw_count.borrow_mut() += 1;
         painter.with_clip_rect(clip_rect).rect_stroke(
             rect.shrink(1.0),
             10.0,
@@ -79,7 +79,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
     let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
         let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
-        //hex_app.rect_draw_count += 1;
+        *hex_app.rect_draw_count.borrow_mut() += 1;
         painter.rect_stroke(rect.shrink(1.0), 10.0, Stroke::new(2.0, color));
     };
     let draw_rounded_box1 = |top_left: CellCoords, bottom_right: CellCoords| {
@@ -96,7 +96,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     };
     let draw_point_circle = |point: CellCoords| {
         let coord = painter_coords(point);
-        //hex_app.rect_draw_count += 1;
         painter.circle_filled(coord, 2.0, Color32::GREEN);
     };
     let draw_cell_text =
@@ -350,7 +349,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     if hex_app.ui_config.cursor {
         if let Some(cursor_pos) = response.hover_pos() {
             let rect = Rect::from_min_size(cursor_pos, Vec2::splat(10.0));
-            hex_app.rect_draw_count += 1;
+            *hex_app.rect_draw_count.borrow_mut() += 1;
             painter.rect_filled(rect, 0.0, byte_color(0));
         }
     }

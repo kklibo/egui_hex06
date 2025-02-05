@@ -4,7 +4,7 @@ use crate::{
 };
 use egui::{Vec2, Window};
 use rand::Rng;
-
+use std::cell::RefCell;
 mod hex_view;
 mod info_bar;
 mod main_view;
@@ -68,7 +68,7 @@ pub struct HexApp {
     hex_view_rows: u8,
     selected_index: Option<usize>,
     selected_range_block: Option<(u64, u64)>,
-    rect_draw_count: usize,
+    rect_draw_count: RefCell<usize>,
     ui_config_window: bool,
     ui_config: UIConfig,
 }
@@ -110,7 +110,7 @@ impl HexApp {
             hex_view_rows: 32,
             selected_index: None,
             selected_range_block: None,
-            rect_draw_count: 0,
+            rect_draw_count: RefCell::new(0),
             ui_config_window: false,
             ui_config: UIConfig {
                 final_incomplete_block: true,
