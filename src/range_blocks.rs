@@ -1,8 +1,12 @@
 use std::collections::HashMap;
 
-use egui::{Pos2, Rect};
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct CellCoords {
+    pub x: u64,
+    pub y: u64,
+}
 
-pub fn get_cell_offset(index: u64, sub_block_sqrt: u64) -> (u64, u64) {
+pub fn get_cell_offset(index: u64, sub_block_sqrt: u64) -> CellCoords {
     let sub_block_count = sub_block_sqrt * sub_block_sqrt;
     let (mut x, mut y) = (0, 0);
     let mut index = index;
@@ -18,17 +22,23 @@ pub fn get_cell_offset(index: u64, sub_block_sqrt: u64) -> (u64, u64) {
         scale *= sub_block_sqrt;
     }
 
-    (x, y)
+    CellCoords { x, y }
 }
 
-pub fn range_block_rect(index: u64, count: u64, sub_block_sqrt: u64, cell_width: f32) -> Rect {
-    let (x, y) = get_cell_offset(index, sub_block_sqrt);
-    let min = Pos2::new(x as f32, y as f32) * cell_width;
+pub fn range_block_corners(
+    index: u64,
+    count: u64,
+    sub_block_sqrt: u64,
+) -> (CellCoords, CellCoords) {
+    let top_left = get_cell_offset(index, sub_block_sqrt);
 
-    let (x, y) = get_cell_offset(index + count - 1, sub_block_sqrt);
-    let max = Pos2::new((x + 1) as f32, (y + 1) as f32) * cell_width;
+    let bottom_right = get_cell_offset(index + count - 1, sub_block_sqrt);
+    let bottom_right = CellCoords {
+        x: bottom_right.x + 1,
+        y: bottom_right.y + 1,
+    };
 
-    Rect::from_min_max(min, max)
+    (top_left, bottom_right)
 }
 
 pub fn range_block_size(recursion_level: u32, sub_block_sqrt: u64) -> u64 {

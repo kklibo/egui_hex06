@@ -4,7 +4,7 @@ use crate::{
 };
 use egui::{Vec2, Window};
 use rand::Rng;
-
+use std::cell::RefCell;
 mod hex_view;
 mod info_bar;
 mod main_view;
@@ -32,6 +32,19 @@ fn random_pattern(len: usize) -> Vec<u8> {
     (0..len).map(|_| rng.gen_range(0..=255)).collect()
 }
 
+pub struct UIConfig {
+    pub final_incomplete_block: bool,
+    pub cell_text: bool,
+    pub block_address_text: bool,
+    pub block_group_outline: bool,
+    pub selection_boxes: bool,
+    pub selection_border_corner_points: bool,
+    pub selection_border: bool,
+    pub selected_subblock_boxes: bool,
+    pub selected_block: bool,
+    pub cursor: bool,
+}
+
 pub struct HexApp {
     source_name0: Option<String>,
     source_name1: Option<String>,
@@ -55,7 +68,9 @@ pub struct HexApp {
     hex_view_rows: u8,
     selected_index: Option<usize>,
     selected_range_block: Option<(u64, u64)>,
-    rect_draw_count: usize,
+    rect_draw_count: RefCell<usize>,
+    ui_config_window: bool,
+    ui_config: UIConfig,
 }
 
 impl HexApp {
@@ -95,7 +110,20 @@ impl HexApp {
             hex_view_rows: 32,
             selected_index: None,
             selected_range_block: None,
-            rect_draw_count: 0,
+            rect_draw_count: RefCell::new(0),
+            ui_config_window: false,
+            ui_config: UIConfig {
+                final_incomplete_block: true,
+                cell_text: true,
+                block_address_text: true,
+                block_group_outline: true,
+                selection_boxes: true,
+                selection_border_corner_points: true,
+                selection_border: true,
+                selected_subblock_boxes: true,
+                selected_block: true,
+                cursor: true,
+            },
         }
     }
 }
@@ -137,6 +165,33 @@ impl eframe::App for HexApp {
                 }
             }
         });
+
+        Window::new("UI Config")
+            .open(&mut self.ui_config_window)
+            .show(ctx, |ui| {
+                ui.checkbox(
+                    &mut self.ui_config.final_incomplete_block,
+                    "Final incomplete block",
+                );
+                ui.checkbox(&mut self.ui_config.cell_text, "Cell text");
+                ui.checkbox(&mut self.ui_config.block_address_text, "Block address text");
+                ui.checkbox(
+                    &mut self.ui_config.block_group_outline,
+                    "Block group outline",
+                );
+                ui.checkbox(&mut self.ui_config.selection_boxes, "Selection boxes");
+                ui.checkbox(
+                    &mut self.ui_config.selection_border_corner_points,
+                    "Selection border corner points",
+                );
+                ui.checkbox(&mut self.ui_config.selection_border, "Selection border");
+                ui.checkbox(
+                    &mut self.ui_config.selected_subblock_boxes,
+                    "Selected subblock boxes",
+                );
+                ui.checkbox(&mut self.ui_config.selected_block, "Selected block");
+                ui.checkbox(&mut self.ui_config.cursor, "Cursor");
+            });
 
         Window::new("Block info").show(ctx, |ui| {
             if let Some((index, count)) = self.selected_range_block {
