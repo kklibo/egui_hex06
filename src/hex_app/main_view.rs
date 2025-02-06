@@ -167,14 +167,12 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
 
         let selection_range_blocks = |index: u64, count: u64| {
-            let range_block_iterator = CompleteLargestRangeBlockIterator::new(
+            CompleteLargestRangeBlockIterator::new(
                 index,
                 index + count,
                 max_recursion_level,
                 sub_block_sqrt,
-            );
-
-            range_block_iterator.filter(move |&(index, count)| is_visible(index, count))
+            )
         };
 
         let visible_range_blocks = |target_recursion_level: u32| {
