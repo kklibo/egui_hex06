@@ -181,6 +181,20 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             visible_range_blocks_within(target_recursion_level, 0, data_len)
         };
 
+        if let Some(other_data) = other_data {
+            let other_data_len: u64 = other_data
+                .len()
+                .try_into()
+                .expect("other_data.len() should fit in u64");
+            draw_range_border(
+                selection_range_blocks(0, other_data_len),
+                sub_block_sqrt,
+                |start, corner, end| {
+                    draw_rounded_corner(start, corner, end, Color32::DARK_GRAY);
+                },
+            );
+        }
+
         for (index, count) in visible_range_blocks(rendered_recursion_level) {
             let diff_bytes = if hex_app.color_mode == ColorMode::Diff {
                 if let Some(other_data) = other_data {
