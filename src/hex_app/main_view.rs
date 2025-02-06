@@ -56,21 +56,22 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
         coord + center.to_vec2()
     };
-    let draw_rounded_corner = |start: CellCoords, corner: CellCoords, end: CellCoords| {
-        let vec0 = painter_coords(corner) - painter_coords(start);
-        let vec1 = painter_coords(end) - painter_coords(corner);
+    let draw_rounded_corner =
+        |start: CellCoords, corner: CellCoords, end: CellCoords, color: Color32| {
+            let vec0 = painter_coords(corner) - painter_coords(start);
+            let vec1 = painter_coords(end) - painter_coords(corner);
 
-        let bound_size = (vec0 + vec1).abs();
-        let clip_rect = Rect::from_center_size(painter_coords(corner), bound_size);
+            let bound_size = (vec0 + vec1).abs();
+            let clip_rect = Rect::from_center_size(painter_coords(corner), bound_size);
 
-        let rect = Rect::from_two_pos(painter_coords(start), painter_coords(end));
-        *hex_app.rect_draw_count.borrow_mut() += 1;
-        painter.with_clip_rect(clip_rect).rect_stroke(
-            rect.shrink(1.0),
-            10.0,
-            Stroke::new(2.0, Color32::BLACK),
-        );
-    };
+            let rect = Rect::from_two_pos(painter_coords(start), painter_coords(end));
+            *hex_app.rect_draw_count.borrow_mut() += 1;
+            painter.with_clip_rect(clip_rect).rect_stroke(
+                rect.shrink(1.0),
+                10.0,
+                Stroke::new(2.0, color),
+            );
+        };
 
     let draw_rounded_filled_box =
         |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
@@ -227,6 +228,13 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                             draw_rounded_filled_box(top_left, bottom_right, fill_color);
                         },
                     );
+                    draw_range_border(
+                        selection_range_blocks(index, count),
+                        sub_block_sqrt,
+                        |start, corner, end| {
+                            draw_rounded_corner(start, corner, end, fill_color);
+                        },
+                    );
                 } else {
                     // This should be impossible.
                     log::error!("index > data_len");
@@ -339,7 +347,9 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 draw_range_border(
                     selection_range_blocks(selected_index as u64, count),
                     sub_block_sqrt,
-                    draw_rounded_corner,
+                    |start, corner, end| {
+                        draw_rounded_corner(start, corner, end, Color32::BLACK);
+                    },
                 );
             }
         }
