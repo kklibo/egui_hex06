@@ -85,9 +85,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     let draw_rounded_box1 = |top_left: CellCoords, bottom_right: CellCoords| {
         draw_rounded_box(top_left, bottom_right, Color32::GOLD);
     };
-    let draw_rounded_box2 = |top_left: CellCoords, bottom_right: CellCoords| {
-        draw_rounded_box(top_left, bottom_right, Color32::DARK_RED);
-    };
     let draw_rounded_box3 = |top_left: CellCoords, bottom_right: CellCoords| {
         draw_rounded_box(top_left, bottom_right, Color32::WHITE);
     };
@@ -184,21 +181,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
 
         for (index, count) in visible_range_blocks(rendered_recursion_level) {
-            if hex_app.ui_config.final_incomplete_block && index + count > data_len {
-                // Final incomplete range block
-                if let Some(count) = data_len.checked_sub(index) {
-                    draw_range_boxes(
-                        selection_range_blocks(index, count),
-                        sub_block_sqrt,
-                        draw_rounded_box2,
-                    );
-                } else {
-                    // This should be impossible.
-                    log::error!("index > data_len");
-                }
-                continue;
-            }
-
             let diff_bytes = if hex_app.color_mode == ColorMode::Diff {
                 if let Some(other_data) = other_data {
                     hex_app.diff_cache.get(index, count).unwrap_or_else(|| {
@@ -234,6 +216,23 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     ColorMode::Diff => diff_color(diff_bytes, count),
                 }
             };
+
+            if hex_app.ui_config.final_incomplete_block && index + count > data_len {
+                // Final incomplete range block
+                if let Some(count) = data_len.checked_sub(index) {
+                    draw_range_boxes(
+                        selection_range_blocks(index, count),
+                        sub_block_sqrt,
+                        |top_left, bottom_right| {
+                            draw_rounded_filled_box(top_left, bottom_right, fill_color);
+                        },
+                    );
+                } else {
+                    // This should be impossible.
+                    log::error!("index > data_len");
+                }
+                continue;
+            }
 
             draw_rounded_filled_box(top_left, bottom_right, fill_color);
 
