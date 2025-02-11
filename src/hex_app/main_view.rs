@@ -76,6 +76,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     let draw_rounded_filled_box =
         |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
             let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
+            *hex_app.rect_draw_count.borrow_mut() += 1;
             painter.rect_filled(rect, 10.0, color);
         };
     let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
