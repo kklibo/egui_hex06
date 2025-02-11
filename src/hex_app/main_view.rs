@@ -56,21 +56,22 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
         coord + center.to_vec2()
     };
-    let draw_rounded_corner = |start: CellCoords, corner: CellCoords, end: CellCoords| {
-        let vec0 = painter_coords(corner) - painter_coords(start);
-        let vec1 = painter_coords(end) - painter_coords(corner);
+    let draw_rounded_corner =
+        |start: CellCoords, corner: CellCoords, end: CellCoords, color: Color32| {
+            let vec0 = painter_coords(corner) - painter_coords(start);
+            let vec1 = painter_coords(end) - painter_coords(corner);
 
-        let bound_size = (vec0 + vec1).abs();
-        let clip_rect = Rect::from_center_size(painter_coords(corner), bound_size);
+            let bound_size = (vec0 + vec1).abs();
+            let clip_rect = Rect::from_center_size(painter_coords(corner), bound_size);
 
-        let rect = Rect::from_two_pos(painter_coords(start), painter_coords(end));
-        *hex_app.rect_draw_count.borrow_mut() += 1;
-        painter.with_clip_rect(clip_rect).rect_stroke(
-            rect.shrink(1.0),
-            10.0,
-            Stroke::new(2.0, Color32::BLACK),
-        );
-    };
+            let rect = Rect::from_two_pos(painter_coords(start), painter_coords(end));
+            *hex_app.rect_draw_count.borrow_mut() += 1;
+            painter.with_clip_rect(clip_rect).rect_stroke(
+                rect.shrink(1.0),
+                10.0,
+                Stroke::new(2.0, color),
+            );
+        };
 
     let draw_rounded_filled_box =
         |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
@@ -84,9 +85,6 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     };
     let draw_rounded_box1 = |top_left: CellCoords, bottom_right: CellCoords| {
         draw_rounded_box(top_left, bottom_right, Color32::GOLD);
-    };
-    let draw_rounded_box2 = |top_left: CellCoords, bottom_right: CellCoords| {
-        draw_rounded_box(top_left, bottom_right, Color32::DARK_RED);
     };
     let draw_rounded_box3 = |top_left: CellCoords, bottom_right: CellCoords| {
         draw_rounded_box(top_left, bottom_right, Color32::WHITE);
@@ -169,36 +167,33 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         };
 
         let selection_range_blocks = |index: u64, count: u64| {
-            let range_block_iterator = CompleteLargestRangeBlockIterator::new(
+            CompleteLargestRangeBlockIterator::new(
                 index,
                 index + count,
                 max_recursion_level,
                 sub_block_sqrt,
-            );
-
-            range_block_iterator.filter(move |&(index, count)| is_visible(index, count))
+            )
         };
 
         let visible_range_blocks = |target_recursion_level: u32| {
             visible_range_blocks_within(target_recursion_level, 0, data_len)
         };
 
-        for (index, count) in visible_range_blocks(rendered_recursion_level) {
-            if hex_app.ui_config.final_incomplete_block && index + count > data_len {
-                // Final incomplete range block
-                if let Some(count) = data_len.checked_sub(index) {
-                    draw_range_boxes(
-                        selection_range_blocks(index, count),
-                        sub_block_sqrt,
-                        draw_rounded_box2,
-                    );
-                } else {
-                    // This should be impossible.
-                    log::error!("index > data_len");
-                }
-                continue;
-            }
+        if let Some(other_data) = other_data {
+            let other_data_len: u64 = other_data
+                .len()
+                .try_into()
+                .expect("other_data.len() should fit in u64");
+            draw_range_border(
+                selection_range_blocks(0, other_data_len),
+                sub_block_sqrt,
+                |start, corner, end| {
+                    draw_rounded_corner(start, corner, end, Color32::DARK_GRAY);
+                },
+            );
+        }
 
+        for (index, count) in visible_range_blocks(rendered_recursion_level) {
             let diff_bytes = if hex_app.color_mode == ColorMode::Diff {
                 if let Some(other_data) = other_data {
                     hex_app.diff_cache.get(index, count).unwrap_or_else(|| {
@@ -234,6 +229,30 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     ColorMode::Diff => diff_color(diff_bytes, count),
                 }
             };
+
+            if hex_app.ui_config.final_incomplete_block && index + count > data_len {
+                // Final incomplete range block
+                if let Some(count) = data_len.checked_sub(index) {
+                    draw_range_boxes(
+                        selection_range_blocks(index, count),
+                        sub_block_sqrt,
+                        |top_left, bottom_right| {
+                            draw_rounded_filled_box(top_left, bottom_right, fill_color);
+                        },
+                    );
+                    draw_range_border(
+                        selection_range_blocks(index, count),
+                        sub_block_sqrt,
+                        |start, corner, end| {
+                            draw_rounded_corner(start, corner, end, fill_color);
+                        },
+                    );
+                } else {
+                    // This should be impossible.
+                    log::error!("index > data_len");
+                }
+                continue;
+            }
 
             draw_rounded_filled_box(top_left, bottom_right, fill_color);
 
@@ -340,7 +359,9 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 draw_range_border(
                     selection_range_blocks(selected_index as u64, count),
                     sub_block_sqrt,
-                    draw_rounded_corner,
+                    |start, corner, end| {
+                        draw_rounded_corner(start, corner, end, Color32::BLACK);
+                    },
                 );
             }
         }
