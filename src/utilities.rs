@@ -31,7 +31,16 @@ pub fn diff_color(diff_bytes: Option<usize>, count: u64) -> Color32 {
 }
 
 pub fn semantic_color(value: u8) -> Color32 {
-    Color32::from_rgb(value, value, value)
+    if value == 0 {
+        Color32::DARK_GREEN
+    } else if value == 255 {
+        Color32::LIGHT_GREEN
+    } else if (value as char).is_ascii_graphic() {
+        Color32::from_rgb(value, value, 255)
+    } else {
+        let v = 64 + value / 2;
+        Color32::from_rgb(v, v, v)
+    }
 }
 
 pub fn diff_at_index(
