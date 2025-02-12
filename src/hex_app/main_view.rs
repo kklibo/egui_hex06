@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 
-use crate::hex_app::{
-    byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
-};
+use crate::hex_app::{byte_color, byte_text, contrast, diff_color, ColorMode, HexApp, WhichFile};
 use crate::range_blocks::{
     max_recursion_level, range_block_corners, Cacheable, CellCoords,
     CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
@@ -266,15 +264,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             if rendered_recursion_level == 0 {
                 if hex_app.ui_config.cell_text {
                     let byte: u8 = data[usize::try_from(index).expect("temp fix")];
-                    let display_text = match hex_app.cell_view_mode {
-                        CellViewMode::Hex => format!("{byte:02X}"),
-                        CellViewMode::Ascii => if byte.is_ascii_graphic() {
-                            byte as char
-                        } else {
-                            '.'
-                        }
-                        .to_string(),
-                    };
+                    let display_text = byte_text(byte, hex_app.cell_view_mode);
                     draw_cell_text(top_left, bottom_right, contrast(fill_color), &display_text);
                 }
             } else if hex_app.ui_config.block_address_text {

@@ -15,10 +15,22 @@ enum WhichFile {
     File0,
     File1,
 }
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum CellViewMode {
     Hex,
     Ascii,
+}
+
+fn byte_text(byte: u8, cell_view_mode: CellViewMode) -> String {
+    match cell_view_mode {
+        CellViewMode::Hex => format!("{byte:02X}"),
+        CellViewMode::Ascii => if byte.is_ascii_graphic() {
+            byte as char
+        } else {
+            '.'
+        }
+        .to_string(),
+    }
 }
 
 #[derive(PartialEq)]
