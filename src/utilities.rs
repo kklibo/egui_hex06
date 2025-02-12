@@ -30,6 +30,10 @@ pub fn diff_color(diff_bytes: Option<usize>, count: u64) -> Color32 {
     }
 }
 
+pub fn semantic_color(value: u8) -> Color32 {
+    Color32::from_rgb(value, value, value)
+}
+
 pub fn diff_at_index(
     data0: &Option<impl Deref<Target = [u8]>>,
     data1: &Option<impl Deref<Target = [u8]>>,

@@ -33,10 +33,11 @@ fn byte_text(byte: u8, cell_view_mode: CellViewMode) -> String {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum ColorMode {
     Value,
     Diff,
+    Semantic01,
 }
 
 fn random_pattern(len: usize) -> Vec<u8> {

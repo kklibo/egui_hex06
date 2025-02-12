@@ -26,5 +26,10 @@ pub fn top_bar(hex_app: &mut HexApp, _ctx: &egui::Context, ui: &mut egui::Ui) {
         ui.label("Color Mode:");
         ui.selectable_value(&mut hex_app.color_mode, ColorMode::Value, "Value");
         ui.selectable_value(&mut hex_app.color_mode, ColorMode::Diff, "Diff");
+        ui.selectable_value(
+            &mut hex_app.color_mode,
+            ColorMode::Semantic01,
+            "Semantic 01",
+        );
     });
 }
