@@ -1,6 +1,6 @@
 use crate::{
-    hex_app::{ColorMode, HexApp, WhichFile},
-    utilities::{byte_color, contrast, diff_at_index, diff_color},
+    hex_app::{byte_text, ColorMode, HexApp, WhichFile},
+    utilities::{byte_color, contrast, diff_at_index, diff_color, semantic_color},
 };
 use egui::{Context, RichText, TextStyle, Ui};
 
@@ -57,7 +57,6 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 for i in 0..hex_app.hex_view_rows {
                     let line_index = index + usize::from(i) * columns;
                     let address = format!("{:08X}:", line_index);
-                    let mut display_text = String::new();
                     let mut offset = line_index;
 
                     ui.horizontal(|ui| {
@@ -81,15 +80,17 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
                                     diff_color(diff_bytes, 1)
                                 }
+                                ColorMode::Semantic01 => semantic_color(data[offset]),
                             };
 
+                            let text =
+                                format!("{:2}", byte_text(data[offset], hex_app.cell_view_mode));
                             ui.label(
-                                RichText::new(format!("{:02X}", data[offset]))
+                                RichText::new(text)
                                     .color(contrast(color))
                                     .background_color(color)
                                     .monospace(),
                             );
-                            display_text += &format!("{:02X} ", data[offset]);
                             offset += 1;
                         }
                     });
@@ -101,7 +102,8 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     let mut display_text = String::new();
                     let mut offset = line_index;
                     while offset < data.len() && offset < line_index + columns {
-                        display_text += &format!("{:02X} ", data[offset]);
+                        display_text +=
+                            &format!("{:2} ", byte_text(data[offset], hex_app.cell_view_mode));
                         offset += 1;
                     }
                     ui.horizontal(|ui| {

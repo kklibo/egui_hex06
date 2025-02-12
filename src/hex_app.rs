@@ -15,16 +15,29 @@ enum WhichFile {
     File0,
     File1,
 }
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum CellViewMode {
     Hex,
     Ascii,
 }
 
-#[derive(PartialEq)]
+fn byte_text(byte: u8, cell_view_mode: CellViewMode) -> String {
+    match cell_view_mode {
+        CellViewMode::Hex => format!("{byte:02X}"),
+        CellViewMode::Ascii => if byte.is_ascii_graphic() {
+            byte as char
+        } else {
+            '.'
+        }
+        .to_string(),
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum ColorMode {
     Value,
     Diff,
+    Semantic01,
 }
 
 fn random_pattern(len: usize) -> Vec<u8> {
@@ -90,8 +103,16 @@ impl HexApp {
         Self {
             source_name0: None,
             source_name1: None,
-            cache0: RangeBlockCache::generate(&RangeBlockSum::new(&data0), data0.len(), 4),
-            cache1: RangeBlockCache::generate(&RangeBlockSum::new(&data1), data1.len(), 4),
+            cache0: RangeBlockCache::generate(
+                &RangeBlockSum::new(&data0),
+                data0.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
+            cache1: RangeBlockCache::generate(
+                &RangeBlockSum::new(&data1),
+                data1.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
             diff_cache: RangeBlockCache::new(),
             pattern0: Some(data0),
             pattern1: Some(data1),
@@ -141,7 +162,7 @@ impl eframe::App for HexApp {
                             self.cache0 = RangeBlockCache::generate(
                                 &RangeBlockSum::new(self.pattern0.as_ref().unwrap()),
                                 self.pattern0.as_ref().unwrap().len(),
-                                4,
+                                Self::SUB_BLOCK_SQRT,
                             );
                         }
                         WhichFile::File1 => {
@@ -151,7 +172,7 @@ impl eframe::App for HexApp {
                             self.cache1 = RangeBlockCache::generate(
                                 &RangeBlockSum::new(self.pattern1.as_ref().unwrap()),
                                 self.pattern1.as_ref().unwrap().len(),
-                                4,
+                                Self::SUB_BLOCK_SQRT,
                             );
                         }
                     }
@@ -159,7 +180,7 @@ impl eframe::App for HexApp {
                         self.diff_cache = RangeBlockCache::generate(
                             &RangeBlockDiff::new(pattern0, pattern1),
                             std::cmp::max(pattern0.len(), pattern1.len()),
-                            4,
+                            Self::SUB_BLOCK_SQRT,
                         );
                     }
                 }

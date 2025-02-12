@@ -1,13 +1,12 @@
 use std::collections::HashSet;
 
-use crate::hex_app::{
-    byte_color, contrast, diff_color, CellViewMode, ColorMode, HexApp, WhichFile,
-};
+use crate::hex_app::{byte_color, byte_text, contrast, diff_color, ColorMode, HexApp, WhichFile};
 use crate::range_blocks::{
     max_recursion_level, range_block_corners, Cacheable, CellCoords,
     CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
 };
 use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
+use crate::utilities::semantic_color;
 use egui::{Align2, Color32, Context, FontId, Pos2, Rect, Sense, Stroke, Ui, Vec2};
 
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
@@ -76,6 +75,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     let draw_rounded_filled_box =
         |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
             let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
+            *hex_app.rect_draw_count.borrow_mut() += 1;
             painter.rect_filled(rect, 10.0, color);
         };
     let draw_rounded_box = |top_left: CellCoords, bottom_right: CellCoords, color: Color32| {
@@ -219,12 +219,16 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 Color32::WHITE
             } else {
                 match hex_app.color_mode {
-                    ColorMode::Value => {
+                    x @ (ColorMode::Value | ColorMode::Semantic01) => {
                         let sum = data_cache
                             .get(index, count)
                             .unwrap_or_else(|| RangeBlockSum::new(data).value(index, count));
                         let average = sum as f32 / count as f32;
-                        byte_color(average as u8)
+                        if x == ColorMode::Semantic01 {
+                            semantic_color(average as u8)
+                        } else {
+                            byte_color(average as u8)
+                        }
                     }
                     ColorMode::Diff => diff_color(diff_bytes, count),
                 }
@@ -265,15 +269,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             if rendered_recursion_level == 0 {
                 if hex_app.ui_config.cell_text {
                     let byte: u8 = data[usize::try_from(index).expect("temp fix")];
-                    let display_text = match hex_app.cell_view_mode {
-                        CellViewMode::Hex => format!("{byte:02X}"),
-                        CellViewMode::Ascii => if byte.is_ascii_graphic() {
-                            byte as char
-                        } else {
-                            '.'
-                        }
-                        .to_string(),
-                    };
+                    let display_text = byte_text(byte, hex_app.cell_view_mode);
                     draw_cell_text(top_left, bottom_right, contrast(fill_color), &display_text);
                 }
             } else if hex_app.ui_config.block_address_text {
