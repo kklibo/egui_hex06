@@ -82,8 +82,10 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                                 }
                             };
 
+                            let text =
+                                format!("{:2}", byte_text(data[offset], hex_app.cell_view_mode));
                             ui.label(
-                                RichText::new(byte_text(data[offset], hex_app.cell_view_mode))
+                                RichText::new(text)
                                     .color(contrast(color))
                                     .background_color(color)
                                     .monospace(),
@@ -99,8 +101,8 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     let mut display_text = String::new();
                     let mut offset = line_index;
                     while offset < data.len() && offset < line_index + columns {
-                        display_text += &byte_text(data[offset], hex_app.cell_view_mode);
-                        display_text += " ";
+                        display_text +=
+                            &format!("{:2} ", byte_text(data[offset], hex_app.cell_view_mode));
                         offset += 1;
                     }
                     ui.horizontal(|ui| {
