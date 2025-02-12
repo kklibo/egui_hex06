@@ -15,10 +15,29 @@ enum WhichFile {
     File0,
     File1,
 }
+
+impl WhichFile {
+    pub fn next(&self) -> Self {
+        match self {
+            WhichFile::File0 => WhichFile::File1,
+            WhichFile::File1 => WhichFile::File0,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum CellViewMode {
     Hex,
     Ascii,
+}
+
+impl CellViewMode {
+    pub fn next(&self) -> Self {
+        match self {
+            CellViewMode::Hex => CellViewMode::Ascii,
+            CellViewMode::Ascii => CellViewMode::Hex,
+        }
+    }
 }
 
 fn byte_text(byte: u8, cell_view_mode: CellViewMode) -> String {
@@ -38,6 +57,16 @@ enum ColorMode {
     Value,
     Diff,
     Semantic01,
+}
+
+impl ColorMode {
+    pub fn next(&self) -> Self {
+        match self {
+            ColorMode::Value => ColorMode::Diff,
+            ColorMode::Diff => ColorMode::Semantic01,
+            ColorMode::Semantic01 => ColorMode::Value,
+        }
+    }
 }
 
 fn random_pattern(len: usize) -> Vec<u8> {

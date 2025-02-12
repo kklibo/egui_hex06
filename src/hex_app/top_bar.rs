@@ -1,8 +1,23 @@
+use egui::{Key, KeyboardShortcut, Modifiers};
+
 use crate::hex_app::HexApp;
 
 use super::{CellViewMode, ColorMode, WhichFile};
 
-pub fn top_bar(hex_app: &mut HexApp, _ctx: &egui::Context, ui: &mut egui::Ui) {
+pub fn top_bar(hex_app: &mut HexApp, ctx: &egui::Context, ui: &mut egui::Ui) {
+    ctx.input_mut(|i| {
+        if i.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::F)) {
+            hex_app.active_file = hex_app.active_file.next();
+        }
+
+        if i.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::V)) {
+            hex_app.cell_view_mode = hex_app.cell_view_mode.next();
+        }
+        if i.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::C)) {
+            hex_app.color_mode = hex_app.color_mode.next();
+        }
+    });
+
     ui.horizontal(|ui| {
         ui.heading("hex diff test (egui UI)");
         ui.separator();
