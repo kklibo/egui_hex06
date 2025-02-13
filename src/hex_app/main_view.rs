@@ -356,7 +356,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     selection_range_blocks(selected_index as u64, count),
                     sub_block_sqrt,
                     |start, corner, end| {
-                        draw_rounded_corner(start, corner, end, Color32::BLACK);
+                        draw_rounded_corner(start, corner, end, Color32::from_rgb(0, 255, 255));
                     },
                 );
             }
