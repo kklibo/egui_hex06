@@ -6,7 +6,7 @@ use crate::range_blocks::{
     CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
 };
 use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
-use crate::utilities::semantic_color;
+use crate::utilities::semantic01_color;
 use egui::{Align2, Color32, Context, FontId, Pos2, Rect, Sense, Stroke, Ui, Vec2};
 
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
@@ -225,7 +225,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                             .unwrap_or_else(|| RangeBlockSum::new(data).value(index, count));
                         let average = sum as f32 / count as f32;
                         if x == ColorMode::Semantic01 {
-                            semantic_color(average as u8)
+                            semantic01_color(average as u8)
                         } else {
                             byte_color(average as u8)
                         }

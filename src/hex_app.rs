@@ -1,6 +1,6 @@
 use crate::{
-    range_blocks::{Cacheable, RangeBlockCache, RangeBlockDiff, RangeBlockSum},
-    utilities::{byte_color, contrast, diff_color},
+    range_blocks::{Cacheable, RangeBlockCache, RangeBlockColorSum, RangeBlockDiff, RangeBlockSum},
+    utilities::{byte_color, contrast, diff_color, semantic01_color},
 };
 use egui::{Vec2, Window};
 use rand::Rng;
@@ -95,6 +95,10 @@ pub struct HexApp {
     cache0: RangeBlockCache<u64>,
     cache1: RangeBlockCache<u64>,
     diff_cache: RangeBlockCache<Option<usize>>,
+    color_cache_value0: RangeBlockCache<(u64, u64, u64)>,
+    color_cache_value1: RangeBlockCache<(u64, u64, u64)>,
+    color_cache_semantic01_0: RangeBlockCache<(u64, u64, u64)>,
+    color_cache_semantic01_1: RangeBlockCache<(u64, u64, u64)>,
     zoom: f32,
     pan: Vec2,
     active_file: WhichFile,
@@ -143,6 +147,50 @@ impl HexApp {
                 Self::SUB_BLOCK_SQRT,
             ),
             diff_cache: RangeBlockCache::new(),
+            color_cache_value0: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data0, |byte| {
+                    (
+                        byte_color(byte).r() as u64,
+                        byte_color(byte).g() as u64,
+                        byte_color(byte).b() as u64,
+                    )
+                }),
+                data0.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
+            color_cache_value1: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data1, |byte| {
+                    (
+                        byte_color(byte).r() as u64,
+                        byte_color(byte).g() as u64,
+                        byte_color(byte).b() as u64,
+                    )
+                }),
+                data1.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
+            color_cache_semantic01_0: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data0, |byte| {
+                    (
+                        semantic01_color(byte).r() as u64,
+                        semantic01_color(byte).g() as u64,
+                        semantic01_color(byte).b() as u64,
+                    )
+                }),
+                data0.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
+            color_cache_semantic01_1: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data1, |byte| {
+                    (
+                        semantic01_color(byte).r() as u64,
+                        semantic01_color(byte).g() as u64,
+                        semantic01_color(byte).b() as u64,
+                    )
+                }),
+                data1.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
             pattern0: Some(data0),
             pattern1: Some(data1),
             zoom: 1.0,
