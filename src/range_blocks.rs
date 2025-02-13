@@ -225,11 +225,11 @@ pub trait Cacheable<T> {
 }
 
 pub struct RangeBlockSum<'a> {
-    data: &'a Vec<u8>,
+    data: &'a [u8],
 }
 
 impl<'a> RangeBlockSum<'a> {
-    pub fn new(data: &'a Vec<u8>) -> Self {
+    pub fn new(data: &'a [u8]) -> Self {
         Self { data }
     }
 
@@ -239,10 +239,7 @@ impl<'a> RangeBlockSum<'a> {
         let index = usize::try_from(index).unwrap_or(usize::MAX);
 
         if index < self.data.len() {
-            (self.data[index..limit]
-                .iter()
-                .map(|&x| x as f32)
-                .sum::<f32>()) as u64
+            self.data[index..limit].iter().map(|&x| x as u64).sum()
         } else {
             0
         }
