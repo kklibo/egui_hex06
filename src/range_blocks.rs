@@ -256,6 +256,53 @@ impl Cacheable<u64> for RangeBlockSum<'_> {
     }
 }
 
+pub struct RangeBlockColorSum<'a, 'b> {
+    data: &'a [u8],
+    color_fn: Box<dyn Fn(u8) -> (u64, u64, u64) + 'b>,
+}
+
+impl<'a, 'b> RangeBlockColorSum<'a, 'b> {
+    pub fn new(data: &'a [u8], color_fn: impl Fn(u8) -> (u64, u64, u64) + 'b) -> Self {
+        Self {
+            data,
+            color_fn: Box::new(color_fn),
+        }
+    }
+
+    pub fn block_color_sum(&self, index: u64, count: u64) -> (u64, u64, u64) {
+        let limit =
+            usize::try_from((self.data.len() as u64).min(index + count)).unwrap_or(usize::MAX);
+        let index = usize::try_from(index).unwrap_or(usize::MAX);
+
+        let (mut sum_r, mut sum_g, mut sum_b) = (0, 0, 0);
+
+        if index < self.data.len() {
+            for (r, g, b) in self.data[index..limit].iter().map(|&x| (self.color_fn)(x)) {
+                sum_r += r;
+                sum_g += g;
+                sum_b += b;
+            }
+            (sum_r, sum_g, sum_b)
+        } else {
+            (0, 0, 0)
+        }
+    }
+}
+
+impl Cacheable<(u64, u64, u64)> for RangeBlockColorSum<'_, '_> {
+    fn value(&self, index: u64, count: u64) -> (u64, u64, u64) {
+        self.block_color_sum(index, count)
+    }
+
+    fn value_from_sub_blocks(&self, value: &[(u64, u64, u64)]) -> (u64, u64, u64) {
+        value
+            .iter()
+            .fold((0, 0, 0), |(sum_r, sum_g, sum_b), (r, g, b)| {
+                (sum_r + r, sum_g + g, sum_b + b)
+            })
+    }
+}
+
 pub struct RangeBlockDiff<'a> {
     data0: &'a [u8],
     data1: &'a [u8],
