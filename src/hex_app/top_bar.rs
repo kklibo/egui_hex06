@@ -46,5 +46,10 @@ pub fn top_bar(hex_app: &mut HexApp, ctx: &egui::Context, ui: &mut egui::Ui) {
             ColorMode::Semantic01,
             "Semantic 01",
         );
+
+        ui.separator();
+
+        ui.label("Color Averaging:");
+        ui.checkbox(&mut hex_app.color_averaging, "Color Averaging");
     });
 }

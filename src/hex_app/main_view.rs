@@ -3,7 +3,8 @@ use std::collections::HashSet;
 use crate::hex_app::{byte_color, byte_text, contrast, diff_color, ColorMode, HexApp, WhichFile};
 use crate::range_blocks::{
     max_recursion_level, range_block_corners, Cacheable, CellCoords,
-    CompleteLargestRangeBlockIterator, RangeBlockDiff, RangeBlockIterator, RangeBlockSum,
+    CompleteLargestRangeBlockIterator, RangeBlockColorSum, RangeBlockDiff, RangeBlockIterator,
+    RangeBlockSum,
 };
 use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
 use crate::utilities::semantic01_color;
@@ -137,18 +138,10 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         WhichFile::File0 => &hex_app.color_cache_value0,
         WhichFile::File1 => &hex_app.color_cache_value1,
     };
-    let other_color_cache_value = match hex_app.active_file {
-        WhichFile::File0 => &hex_app.color_cache_value1,
-        WhichFile::File1 => &hex_app.color_cache_value0,
-    };
 
     let color_cache_semantic01 = match hex_app.active_file {
         WhichFile::File0 => &hex_app.color_cache_semantic01_0,
         WhichFile::File1 => &hex_app.color_cache_semantic01_1,
-    };
-    let other_color_cache_semantic01 = match hex_app.active_file {
-        WhichFile::File0 => &hex_app.color_cache_semantic01_1,
-        WhichFile::File1 => &hex_app.color_cache_semantic01_0,
     };
 
     if let Some(data) = data {
@@ -238,14 +231,46 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             } else {
                 match hex_app.color_mode {
                     x @ (ColorMode::Value | ColorMode::Semantic01) => {
-                        let sum = data_cache
-                            .get(index, count)
-                            .unwrap_or_else(|| RangeBlockSum::new(data).value(index, count));
-                        let average = sum as f32 / count as f32;
-                        if x == ColorMode::Semantic01 {
-                            semantic01_color(average as u8)
+                        if hex_app.color_averaging {
+                            if x == ColorMode::Value {
+                                let (r, g, b) =
+                                    color_cache_value.get(index, count).unwrap_or_else(|| {
+                                        RangeBlockColorSum::new(data, |byte| {
+                                            let color = byte_color(byte);
+                                            (color.r() as u64, color.g() as u64, color.b() as u64)
+                                        })
+                                        .value(index, count)
+                                    });
+                                Color32::from_rgb(
+                                    (r as f32 / count as f32) as u8,
+                                    (g as f32 / count as f32) as u8,
+                                    (b as f32 / count as f32) as u8,
+                                )
+                            } else {
+                                let (r, g, b) =
+                                    color_cache_semantic01.get(index, count).unwrap_or_else(|| {
+                                        RangeBlockColorSum::new(data, |byte| {
+                                            let color = semantic01_color(byte);
+                                            (color.r() as u64, color.g() as u64, color.b() as u64)
+                                        })
+                                        .value(index, count)
+                                    });
+                                Color32::from_rgb(
+                                    (r as f32 / count as f32) as u8,
+                                    (g as f32 / count as f32) as u8,
+                                    (b as f32 / count as f32) as u8,
+                                )
+                            }
                         } else {
-                            byte_color(average as u8)
+                            let sum = data_cache
+                                .get(index, count)
+                                .unwrap_or_else(|| RangeBlockSum::new(data).value(index, count));
+                            let average = sum as f32 / count as f32;
+                            if x == ColorMode::Semantic01 {
+                                semantic01_color(average as u8)
+                            } else {
+                                byte_color(average as u8)
+                            }
                         }
                     }
                     ColorMode::Diff => diff_color(diff_bytes, count),
