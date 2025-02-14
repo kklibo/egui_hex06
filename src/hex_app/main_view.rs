@@ -133,6 +133,24 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         WhichFile::File1 => &hex_app.cache1,
     };
 
+    let color_cache_value = match hex_app.active_file {
+        WhichFile::File0 => &hex_app.color_cache_value0,
+        WhichFile::File1 => &hex_app.color_cache_value1,
+    };
+    let other_color_cache_value = match hex_app.active_file {
+        WhichFile::File0 => &hex_app.color_cache_value1,
+        WhichFile::File1 => &hex_app.color_cache_value0,
+    };
+
+    let color_cache_semantic01 = match hex_app.active_file {
+        WhichFile::File0 => &hex_app.color_cache_semantic01_0,
+        WhichFile::File1 => &hex_app.color_cache_semantic01_1,
+    };
+    let other_color_cache_semantic01 = match hex_app.active_file {
+        WhichFile::File0 => &hex_app.color_cache_semantic01_1,
+        WhichFile::File1 => &hex_app.color_cache_semantic01_0,
+    };
+
     if let Some(data) = data {
         let data_len: u64 = data.len().try_into().expect("data.len() should fit in u64");
         let sub_block_sqrt = HexApp::SUB_BLOCK_SQRT;

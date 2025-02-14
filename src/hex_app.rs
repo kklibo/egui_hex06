@@ -241,6 +241,28 @@ impl eframe::App for HexApp {
                                 self.pattern0.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );
+                            self.color_cache_value0 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern0.as_ref().unwrap(), |byte| {
+                                    (
+                                        byte_color(byte).r() as u64,
+                                        byte_color(byte).g() as u64,
+                                        byte_color(byte).b() as u64,
+                                    )
+                                }),
+                                self.pattern0.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
+                            self.color_cache_semantic01_0 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern0.as_ref().unwrap(), |byte| {
+                                    (
+                                        semantic01_color(byte).r() as u64,
+                                        semantic01_color(byte).g() as u64,
+                                        semantic01_color(byte).b() as u64,
+                                    )
+                                }),
+                                self.pattern0.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
                         }
                         WhichFile::File1 => {
                             log::info!("File1 dropped: {}", dropped_file.name);
@@ -248,6 +270,28 @@ impl eframe::App for HexApp {
                             self.source_name1 = Some(dropped_file.name.clone());
                             self.cache1 = RangeBlockCache::generate(
                                 &RangeBlockSum::new(self.pattern1.as_ref().unwrap()),
+                                self.pattern1.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
+                            self.color_cache_value1 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern1.as_ref().unwrap(), |byte| {
+                                    (
+                                        byte_color(byte).r() as u64,
+                                        byte_color(byte).g() as u64,
+                                        byte_color(byte).b() as u64,
+                                    )
+                                }),
+                                self.pattern1.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
+                            self.color_cache_semantic01_1 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern1.as_ref().unwrap(), |byte| {
+                                    (
+                                        semantic01_color(byte).r() as u64,
+                                        semantic01_color(byte).g() as u64,
+                                        semantic01_color(byte).b() as u64,
+                                    )
+                                }),
                                 self.pattern1.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );
