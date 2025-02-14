@@ -1,6 +1,6 @@
 use crate::{
-    range_blocks::{Cacheable, RangeBlockCache, RangeBlockDiff, RangeBlockSum},
-    utilities::{byte_color, contrast, diff_color},
+    range_blocks::{Cacheable, RangeBlockCache, RangeBlockColorSum, RangeBlockDiff, RangeBlockSum},
+    utilities::{byte_color, contrast, diff_color, semantic01_color},
 };
 use egui::{Vec2, Window};
 use rand::Rng;
@@ -15,10 +15,29 @@ enum WhichFile {
     File0,
     File1,
 }
+
+impl WhichFile {
+    pub fn next(&self) -> Self {
+        match self {
+            WhichFile::File0 => WhichFile::File1,
+            WhichFile::File1 => WhichFile::File0,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum CellViewMode {
     Hex,
     Ascii,
+}
+
+impl CellViewMode {
+    pub fn next(&self) -> Self {
+        match self {
+            CellViewMode::Hex => CellViewMode::Ascii,
+            CellViewMode::Ascii => CellViewMode::Hex,
+        }
+    }
 }
 
 fn byte_text(byte: u8, cell_view_mode: CellViewMode) -> String {
@@ -38,6 +57,16 @@ enum ColorMode {
     Value,
     Diff,
     Semantic01,
+}
+
+impl ColorMode {
+    pub fn next(&self) -> Self {
+        match self {
+            ColorMode::Value => ColorMode::Diff,
+            ColorMode::Diff => ColorMode::Semantic01,
+            ColorMode::Semantic01 => ColorMode::Value,
+        }
+    }
 }
 
 fn random_pattern(len: usize) -> Vec<u8> {
@@ -66,6 +95,10 @@ pub struct HexApp {
     cache0: RangeBlockCache<u64>,
     cache1: RangeBlockCache<u64>,
     diff_cache: RangeBlockCache<Option<usize>>,
+    color_cache_value0: RangeBlockCache<(u64, u64, u64)>,
+    color_cache_value1: RangeBlockCache<(u64, u64, u64)>,
+    color_cache_semantic01_0: RangeBlockCache<(u64, u64, u64)>,
+    color_cache_semantic01_1: RangeBlockCache<(u64, u64, u64)>,
     zoom: f32,
     pan: Vec2,
     active_file: WhichFile,
@@ -76,6 +109,7 @@ pub struct HexApp {
     hover_address: Option<usize>,
     cell_view_mode: CellViewMode,
     color_mode: ColorMode,
+    color_averaging: bool,
     hex_view_color_mode: bool,
     hex_view_columns: u8,
     hex_view_rows: u8,
@@ -114,6 +148,50 @@ impl HexApp {
                 Self::SUB_BLOCK_SQRT,
             ),
             diff_cache: RangeBlockCache::new(),
+            color_cache_value0: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data0, |byte| {
+                    (
+                        byte_color(byte).r() as u64,
+                        byte_color(byte).g() as u64,
+                        byte_color(byte).b() as u64,
+                    )
+                }),
+                data0.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
+            color_cache_value1: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data1, |byte| {
+                    (
+                        byte_color(byte).r() as u64,
+                        byte_color(byte).g() as u64,
+                        byte_color(byte).b() as u64,
+                    )
+                }),
+                data1.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
+            color_cache_semantic01_0: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data0, |byte| {
+                    (
+                        semantic01_color(byte).r() as u64,
+                        semantic01_color(byte).g() as u64,
+                        semantic01_color(byte).b() as u64,
+                    )
+                }),
+                data0.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
+            color_cache_semantic01_1: RangeBlockCache::generate(
+                &RangeBlockColorSum::new(&data1, |byte| {
+                    (
+                        semantic01_color(byte).r() as u64,
+                        semantic01_color(byte).g() as u64,
+                        semantic01_color(byte).b() as u64,
+                    )
+                }),
+                data1.len(),
+                Self::SUB_BLOCK_SQRT,
+            ),
             pattern0: Some(data0),
             pattern1: Some(data1),
             zoom: 1.0,
@@ -126,6 +204,7 @@ impl HexApp {
             hover_address: None,
             cell_view_mode: CellViewMode::Hex,
             color_mode: ColorMode::Value,
+            color_averaging: true,
             hex_view_color_mode: true,
             hex_view_columns: 16,
             hex_view_rows: 32,
@@ -164,6 +243,28 @@ impl eframe::App for HexApp {
                                 self.pattern0.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );
+                            self.color_cache_value0 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern0.as_ref().unwrap(), |byte| {
+                                    (
+                                        byte_color(byte).r() as u64,
+                                        byte_color(byte).g() as u64,
+                                        byte_color(byte).b() as u64,
+                                    )
+                                }),
+                                self.pattern0.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
+                            self.color_cache_semantic01_0 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern0.as_ref().unwrap(), |byte| {
+                                    (
+                                        semantic01_color(byte).r() as u64,
+                                        semantic01_color(byte).g() as u64,
+                                        semantic01_color(byte).b() as u64,
+                                    )
+                                }),
+                                self.pattern0.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
                         }
                         WhichFile::File1 => {
                             log::info!("File1 dropped: {}", dropped_file.name);
@@ -171,6 +272,28 @@ impl eframe::App for HexApp {
                             self.source_name1 = Some(dropped_file.name.clone());
                             self.cache1 = RangeBlockCache::generate(
                                 &RangeBlockSum::new(self.pattern1.as_ref().unwrap()),
+                                self.pattern1.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
+                            self.color_cache_value1 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern1.as_ref().unwrap(), |byte| {
+                                    (
+                                        byte_color(byte).r() as u64,
+                                        byte_color(byte).g() as u64,
+                                        byte_color(byte).b() as u64,
+                                    )
+                                }),
+                                self.pattern1.as_ref().unwrap().len(),
+                                Self::SUB_BLOCK_SQRT,
+                            );
+                            self.color_cache_semantic01_1 = RangeBlockCache::generate(
+                                &RangeBlockColorSum::new(self.pattern1.as_ref().unwrap(), |byte| {
+                                    (
+                                        semantic01_color(byte).r() as u64,
+                                        semantic01_color(byte).g() as u64,
+                                        semantic01_color(byte).b() as u64,
+                                    )
+                                }),
                                 self.pattern1.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );

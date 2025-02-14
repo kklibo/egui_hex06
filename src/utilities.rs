@@ -30,7 +30,7 @@ pub fn diff_color(diff_bytes: Option<usize>, count: u64) -> Color32 {
     }
 }
 
-pub fn semantic_color(value: u8) -> Color32 {
+pub fn semantic01_color(value: u8) -> Color32 {
     if value == 0 {
         Color32::DARK_GREEN
     } else if value == 255 {

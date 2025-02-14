@@ -1,6 +1,6 @@
 use crate::{
     hex_app::{byte_text, ColorMode, HexApp, WhichFile},
-    utilities::{byte_color, contrast, diff_at_index, diff_color, semantic_color},
+    utilities::{byte_color, contrast, diff_at_index, diff_color, semantic01_color},
 };
 use egui::{Context, RichText, TextStyle, Ui};
 
@@ -80,7 +80,7 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
 
                                     diff_color(diff_bytes, 1)
                                 }
-                                ColorMode::Semantic01 => semantic_color(data[offset]),
+                                ColorMode::Semantic01 => semantic01_color(data[offset]),
                             };
 
                             let text =
