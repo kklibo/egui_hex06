@@ -9,6 +9,11 @@ pub fn byte_color(byte: u8) -> Color32 {
     Color32::from_rgb(r, g, b)
 }
 
+pub fn byte_color_rgb(byte: u8) -> (u64, u64, u64) {
+    let c = byte_color(byte);
+    (c.r() as u64, c.g() as u64, c.b() as u64)
+}
+
 pub fn contrast(color: Color32) -> Color32 {
     Color32::from_rgb(
         u8::wrapping_add(color.r(), 128),
@@ -41,6 +46,11 @@ pub fn semantic01_color(value: u8) -> Color32 {
         let v = 64 + value / 2;
         Color32::from_rgb(v, v, v)
     }
+}
+
+pub fn semantic01_color_rgb(value: u8) -> (u64, u64, u64) {
+    let c = semantic01_color(value);
+    (c.r() as u64, c.g() as u64, c.b() as u64)
 }
 
 pub fn diff_at_index(

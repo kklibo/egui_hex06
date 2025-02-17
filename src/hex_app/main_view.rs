@@ -1,13 +1,14 @@
 use std::collections::HashSet;
 
-use crate::hex_app::{byte_color, byte_text, contrast, diff_color, ColorMode, HexApp, WhichFile};
+use crate::hex_app::{byte_text, ColorMode, HexApp, WhichFile};
 use crate::range_blocks::{
     max_recursion_level, range_block_corners, Cacheable, CellCoords,
     CompleteLargestRangeBlockIterator, RangeBlockColorSum, RangeBlockDiff, RangeBlockIterator,
     RangeBlockSum,
 };
 use crate::range_border::{LoopPairIter, LoopsIter, RangeBorder};
-use crate::utilities::semantic01_color;
+use crate::utilities::{byte_color, contrast, diff_color};
+use crate::utilities::{byte_color_rgb, semantic01_color, semantic01_color_rgb};
 use egui::{Align2, Color32, Context, FontId, Pos2, Rect, Sense, Stroke, Ui, Vec2};
 
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
@@ -235,11 +236,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                             if x == ColorMode::Value {
                                 let (r, g, b) =
                                     color_cache_value.get(index, count).unwrap_or_else(|| {
-                                        RangeBlockColorSum::new(data, |byte| {
-                                            let color = byte_color(byte);
-                                            (color.r() as u64, color.g() as u64, color.b() as u64)
-                                        })
-                                        .value(index, count)
+                                        RangeBlockColorSum::new(data, byte_color_rgb)
+                                            .value(index, count)
                                     });
                                 Color32::from_rgb(
                                     (r as f32 / count as f32) as u8,
@@ -249,11 +247,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                             } else {
                                 let (r, g, b) =
                                     color_cache_semantic01.get(index, count).unwrap_or_else(|| {
-                                        RangeBlockColorSum::new(data, |byte| {
-                                            let color = semantic01_color(byte);
-                                            (color.r() as u64, color.g() as u64, color.b() as u64)
-                                        })
-                                        .value(index, count)
+                                        RangeBlockColorSum::new(data, semantic01_color_rgb)
+                                            .value(index, count)
                                     });
                                 Color32::from_rgb(
                                     (r as f32 / count as f32) as u8,
