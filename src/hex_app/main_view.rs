@@ -233,29 +233,22 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 match hex_app.color_mode {
                     x @ (ColorMode::Value | ColorMode::Semantic01) => {
                         if hex_app.color_averaging {
-                            if x == ColorMode::Value {
-                                let (r, g, b) =
-                                    color_cache_value.get(index, count).unwrap_or_else(|| {
-                                        RangeBlockColorSum::new(data, byte_color_rgb)
-                                            .value(index, count)
-                                    });
-                                Color32::from_rgb(
-                                    (r as f32 / count as f32) as u8,
-                                    (g as f32 / count as f32) as u8,
-                                    (b as f32 / count as f32) as u8,
-                                )
+                            let (r, g, b) = if x == ColorMode::Value {
+                                color_cache_value.get(index, count).unwrap_or_else(|| {
+                                    RangeBlockColorSum::new(data, byte_color_rgb)
+                                        .value(index, count)
+                                })
                             } else {
-                                let (r, g, b) =
-                                    color_cache_semantic01.get(index, count).unwrap_or_else(|| {
-                                        RangeBlockColorSum::new(data, semantic01_color_rgb)
-                                            .value(index, count)
-                                    });
-                                Color32::from_rgb(
-                                    (r as f32 / count as f32) as u8,
-                                    (g as f32 / count as f32) as u8,
-                                    (b as f32 / count as f32) as u8,
-                                )
-                            }
+                                color_cache_semantic01.get(index, count).unwrap_or_else(|| {
+                                    RangeBlockColorSum::new(data, semantic01_color_rgb)
+                                        .value(index, count)
+                                })
+                            };
+                            Color32::from_rgb(
+                                (r as f32 / count as f32) as u8,
+                                (g as f32 / count as f32) as u8,
+                                (b as f32 / count as f32) as u8,
+                            )
                         } else {
                             let sum = data_cache
                                 .get(index, count)
