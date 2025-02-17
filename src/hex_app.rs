@@ -5,11 +5,11 @@ use crate::{
 use egui::{Vec2, Window};
 use rand::Rng;
 use std::cell::RefCell;
+mod frame_history;
 mod hex_view;
 mod info_bar;
 mod main_view;
 mod top_bar;
-mod frame_history;
 
 #[derive(Debug, PartialEq)]
 enum WhichFile {
@@ -233,8 +233,8 @@ impl HexApp {
 
 impl eframe::App for HexApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        
-        self.frame_history.on_new_frame(ctx.input(|i| i.time), _frame.info().cpu_usage);
+        self.frame_history
+            .on_new_frame(ctx.input(|i| i.time), _frame.info().cpu_usage);
 
         ctx.input(|i| {
             if let Some(dropped_file) = i.raw.dropped_files.first() {
