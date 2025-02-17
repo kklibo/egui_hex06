@@ -4,6 +4,7 @@ pub fn info_bar(hex_app: &mut crate::hex_app::HexApp, ui: &mut Ui) {
     ui.horizontal(|ui| {
         ui.checkbox(&mut hex_app.dbg_flag, "dbg_flag");
         ui.toggle_value(&mut hex_app.ui_config_window, "UI Config");
+        ui.label(format!("FPS: {0:.1}", hex_app.frame_history.fps()));
         ui.label(format!("self.zoom: {}", hex_app.zoom));
         ui.label(format!("self.pan: {:?}", hex_app.pan));
         ui.label(format!("pan_velocity: {:?}", hex_app.pan_velocity));

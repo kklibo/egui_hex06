@@ -9,6 +9,7 @@ mod hex_view;
 mod info_bar;
 mod main_view;
 mod top_bar;
+mod frame_history;
 
 #[derive(Debug, PartialEq)]
 enum WhichFile {
@@ -118,6 +119,7 @@ pub struct HexApp {
     rect_draw_count: RefCell<usize>,
     ui_config_window: bool,
     ui_config: UIConfig,
+    frame_history: frame_history::FrameHistory,
 }
 
 impl HexApp {
@@ -224,12 +226,16 @@ impl HexApp {
                 selected_block: true,
                 cursor: true,
             },
+            frame_history: frame_history::FrameHistory::default(),
         }
     }
 }
 
 impl eframe::App for HexApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        
+        self.frame_history.on_new_frame(ctx.input(|i| i.time), _frame.info().cpu_usage);
+
         ctx.input(|i| {
             if let Some(dropped_file) = i.raw.dropped_files.first() {
                 if let Some(bytes) = &dropped_file.bytes {
