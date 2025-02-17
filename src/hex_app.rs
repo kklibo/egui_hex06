@@ -232,9 +232,9 @@ impl HexApp {
 }
 
 impl eframe::App for HexApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         self.frame_history
-            .on_new_frame(ctx.input(|i| i.time), _frame.info().cpu_usage);
+            .on_new_frame(ctx.input(|i| i.time), frame.info().cpu_usage);
 
         ctx.input(|i| {
             if let Some(dropped_file) = i.raw.dropped_files.first() {
