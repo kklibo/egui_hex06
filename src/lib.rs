@@ -1,6 +1,5 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod app;
 mod hex_app;
 mod range_blocks;
 mod range_border;
