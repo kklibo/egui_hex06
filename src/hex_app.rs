@@ -213,6 +213,7 @@ impl eframe::App for HexApp {
             .on_new_frame(ctx.input(|i| i.time), frame.info().cpu_usage);
 
         ctx.input(|i| {
+            // Handle files dropped into the window: load the file and update the caches.
             if let Some(dropped_file) = i.raw.dropped_files.first() {
                 if let Some(bytes) = &dropped_file.bytes {
                     match self.active_file {
@@ -280,6 +281,7 @@ impl eframe::App for HexApp {
             }
         });
 
+        // UI config options window (opened via bottom bar button).
         Window::new("UI Config")
             .open(&mut self.ui_config_window)
             .show(ctx, |ui| {
@@ -307,6 +309,8 @@ impl eframe::App for HexApp {
                 ui.checkbox(&mut self.ui_config.cursor, "Cursor");
             });
 
+        // Info window for highlighted range block at the current visible recursion level.
+        // (may want to replace this entire concept)
         Window::new("Block info").show(ctx, |ui| {
             if let Some((index, count)) = self.selected_range_block {
                 ui.label(format!(

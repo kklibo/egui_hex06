@@ -4,6 +4,7 @@ use crate::{
 };
 use egui::{Context, RichText, TextStyle, Ui};
 
+/// Draws the traditional hex editor view in the left side panel.
 pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     ui.horizontal(|ui| {
         ui.label("hex view");
@@ -38,6 +39,7 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         let columns_isize = isize::from(hex_app.hex_view_columns);
         let columns = usize::from(hex_app.hex_view_columns);
         if let Some(data) = data {
+            // Mousewheel scroll control
             if ui.ui_contains_pointer() {
                 let scroll_delta = ui.input(|i| i.raw_scroll_delta);
 
@@ -54,6 +56,7 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
 
             if hex_app.hex_view_color_mode {
+                //Render text with coloring from the UI's selected `ColorMode`.
                 for i in 0..hex_app.hex_view_rows {
                     let line_index = index + usize::from(i) * columns;
                     let address = format!("{:08X}:", line_index);
@@ -96,6 +99,7 @@ pub fn hex_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                     });
                 }
             } else {
+                // Render monochrome text.
                 for i in 0..hex_app.hex_view_rows {
                     let line_index = index + usize::from(i) * columns;
                     let address = format!("{:08X}: ", line_index);

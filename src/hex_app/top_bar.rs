@@ -4,7 +4,9 @@ use crate::hex_app::HexApp;
 
 use super::{CellViewMode, ColorMode, WhichFile};
 
+// Draws the control bar at the top of the window.
 pub fn top_bar(hex_app: &mut HexApp, ctx: &egui::Context, ui: &mut egui::Ui) {
+    // Keyboard shortcuts for some of these controls.
     ctx.input_mut(|i| {
         if i.consume_shortcut(&KeyboardShortcut::new(Modifiers::NONE, Key::F)) {
             hex_app.active_file = hex_app.active_file.next();

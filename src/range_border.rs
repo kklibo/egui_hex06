@@ -19,7 +19,6 @@ pub struct Edge {
 }
 
 impl RangeBorder {
-
     /// Adds a clockwise-ordered rectangular set of 4 edges.
     pub fn add_rect(&mut self, top_left: CellCoords, bottom_right: CellCoords) {
         let top_right = CellCoords {
@@ -141,7 +140,7 @@ impl Iterator for LoopIter<'_> {
 /// A convenience `Iterator` for anything that iterates over the entries of a loop.
 /// Each entry is returned paired with its successor in the loop order,
 /// and the final entry is returned with the first entry, completing the loop.
-/// 
+///
 /// Intended for a `LoopIter` over a loop of `Edge`s: This allows easy access to
 /// adjacent pairs of edges for the rounded corners effect, which needs the two involved
 /// edges at the same time.

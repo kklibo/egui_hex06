@@ -3,7 +3,7 @@
 //! Larger range blocks encompass a square number (normally 16) of smaller ones:
 //! one level of *recursion* is the representation of a range with one more such
 //! encompassing step.
-//! 
+//!
 //! A range block with a recursion level of 0 contains 1 cell.
 
 use std::collections::HashMap;
