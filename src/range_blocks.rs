@@ -1,11 +1,22 @@
+//! A *Range Block* is square graphical representation of a block of contiguous memory.
+//! The smallest size of range block is called a *Cell*: it contains a single byte.
+//! Larger range blocks encompass a square number (normally 16) of smaller ones:
+//! one level of *recursion* is the representation of a range with one more such
+//! encompassing step.
+
+
 use std::collections::HashMap;
 
+/// Integer coordinate units for drawing cells and range blocks
+/// in a two-dimensional rendering scheme. A cell is a single-byte block and has
+/// a nominal size of 1x1, as measured in `CellCoords`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CellCoords {
     pub x: u64,
     pub y: u64,
 }
 
+/// The `CellCoords` of the minimum (top-left) corner of the `index` byte's cell.
 pub fn get_cell_offset(index: u64, sub_block_sqrt: u64) -> CellCoords {
     let sub_block_count = sub_block_sqrt * sub_block_sqrt;
     let (mut x, mut y) = (0, 0);
@@ -25,6 +36,9 @@ pub fn get_cell_offset(index: u64, sub_block_sqrt: u64) -> CellCoords {
     CellCoords { x, y }
 }
 
+/// Calculate the top-left and bottom-right corners of a range block.
+/// Note: `index` and `count` should specify a real square range block,
+/// otherwise the result may not be what you expect.
 pub fn range_block_corners(
     index: u64,
     count: u64,
@@ -41,16 +55,24 @@ pub fn range_block_corners(
     (top_left, bottom_right)
 }
 
+/// The byte size of a range block at a recursion level.
 pub fn range_block_size(recursion_level: u32, sub_block_sqrt: u64) -> u64 {
     sub_block_sqrt.pow(2 * recursion_level)
 }
 
+///
 pub fn max_recursion_level(data_len: u64, sub_block_sqrt: u64) -> u32 {
     (data_len as f32)
         .log((sub_block_sqrt * sub_block_sqrt) as f32)
         .ceil() as u32
 }
 
+/// Finds the next range block at the target recursion level. Range blocks at or above
+/// `target_recursion_level` that are encountered during the search will be tested with
+/// `fn_filter`: if it returns `false`, the entire range block will be skipped.
+///
+/// This filter system is used to efficiently draw only the range blocks
+/// that are currently visible in the UI view window.
 pub fn next_range_block(
     search_start_index: u64,
     data_len: u64,
@@ -105,6 +127,8 @@ pub fn next_range_block(
     }
 }
 
+///`Iterator` over range blocks at the target recursion level.
+/// Uses `next_range_block`: see it for more details.
 pub struct RangeBlockIterator<'a> {
     search_start_index: u64,
     data_len: u64,
@@ -153,6 +177,8 @@ impl Iterator for RangeBlockIterator<'_> {
     }
 }
 
+/// Find the largest (highest recursion level) range block that
+/// starts at `index` and ends before `limit_index`.
 pub fn next_complete_largest_range_block(
     index: u64,
     limit_index: u64,
