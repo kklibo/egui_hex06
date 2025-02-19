@@ -11,12 +11,14 @@ use crate::utilities::{byte_color, contrast, diff_color};
 use crate::utilities::{byte_color_rgb, semantic01_color, semantic01_color_rgb};
 use egui::{Align2, Color32, Context, FontId, Pos2, Rect, Sense, Stroke, Ui, Vec2};
 
+/// Draws the main view containing range blocks with a mouse-controlled pan+zoom interface.
 pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     hex_app.selected_range_block = None; // Reset selected range block (should this be done some other way?)
 
     let (response, painter) =
         ui.allocate_painter(ui.available_size_before_wrap(), Sense::click_and_drag());
 
+    // Mousewheel zoom
     if ui.ui_contains_pointer() {
         let scroll_delta = ui.input(|i| i.smooth_scroll_delta);
 
@@ -36,6 +38,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         }
     }
 
+    // Mouse drag pan with inertia
     let current_time = ui.input(|i| i.time);
     let dt = (current_time - hex_app.last_update_time) as f32;
     hex_app.last_update_time = current_time;
@@ -52,6 +55,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     *hex_app.rect_draw_count.borrow_mut() = 1;
     painter.rect_filled(painter.clip_rect(), 10.0, Color32::GRAY);
 
+    // Local drawing utility functions:
     let painter_coords = |point: CellCoords| -> Pos2 {
         let center = painter.clip_rect().center() + hex_app.pan;
         let coord = Pos2::new(point.x as f32, point.y as f32) * hex_app.zoom;
@@ -149,6 +153,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         let data_len: u64 = data.len().try_into().expect("data.len() should fit in u64");
         let sub_block_sqrt = HexApp::SUB_BLOCK_SQRT;
         let max_recursion_level = max_recursion_level(data_len, sub_block_sqrt);
+
+        // Automatically choose a range block recursion level based on the current zoom level.
         let rendered_recursion_level = std::cmp::min(max_recursion_level, {
             let cell_width = painter.clip_rect().width() / hex_app.zoom;
 
@@ -160,6 +166,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             max_recursion_level, rendered_recursion_level
         );
 
+        // `true` IFF part of this range block is visible in the rendering window.
         let is_visible = |index: u64, count: u64| {
             let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
             let rect = Rect::from_two_pos(painter_coords(top_left), painter_coords(bottom_right));
@@ -167,6 +174,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             painter.clip_rect().intersects(rect)
         };
 
+        // Convenience function: iterates over visible blocks in a range.
         let visible_range_blocks_within = |target_recursion_level: u32, index: u64, count: u64| {
             RangeBlockIterator::new(
                 index,
@@ -178,6 +186,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             )
         };
 
+        // Convenience function: iterates over the largest possible range blocks that fill a range.
         let selection_range_blocks = |index: u64, count: u64| {
             CompleteLargestRangeBlockIterator::new(
                 index,
@@ -187,6 +196,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             )
         };
 
+        // Convenience function: iterates over visible blocks over the entire data range.
         let visible_range_blocks = |target_recursion_level: u32| {
             visible_range_blocks_within(target_recursion_level, 0, data_len)
         };
@@ -205,6 +215,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             );
         }
 
+        // Draw visible range blocks + related effects.
         for (index, count) in visible_range_blocks(rendered_recursion_level) {
             let diff_bytes = if hex_app.color_mode == ColorMode::Diff {
                 if let Some(other_data) = other_data {

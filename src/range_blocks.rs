@@ -5,6 +5,8 @@
 //! encompassing step.
 //!
 //! A range block with a recursion level of 0 contains 1 cell.
+//! Range block start indices are always aligned such that
+//! 0 == *start index* % *block size in bytes (or cells)*.
 
 use std::collections::HashMap;
 
