@@ -1,6 +1,6 @@
 use crate::{
     range_blocks::{Cacheable, RangeBlockCache, RangeBlockColorSum, RangeBlockDiff, RangeBlockSum},
-    utilities::{byte_color, contrast, diff_color, semantic01_color},
+    utilities::{byte_color_rgb, semantic01_color_rgb},
 };
 use egui::{Vec2, Window};
 use rand::Rng;
@@ -151,46 +151,22 @@ impl HexApp {
             ),
             diff_cache: RangeBlockCache::new(),
             color_cache_value0: RangeBlockCache::generate(
-                &RangeBlockColorSum::new(&data0, |byte| {
-                    (
-                        byte_color(byte).r() as u64,
-                        byte_color(byte).g() as u64,
-                        byte_color(byte).b() as u64,
-                    )
-                }),
+                &RangeBlockColorSum::new(&data0, byte_color_rgb),
                 data0.len(),
                 Self::SUB_BLOCK_SQRT,
             ),
             color_cache_value1: RangeBlockCache::generate(
-                &RangeBlockColorSum::new(&data1, |byte| {
-                    (
-                        byte_color(byte).r() as u64,
-                        byte_color(byte).g() as u64,
-                        byte_color(byte).b() as u64,
-                    )
-                }),
+                &RangeBlockColorSum::new(&data1, byte_color_rgb),
                 data1.len(),
                 Self::SUB_BLOCK_SQRT,
             ),
             color_cache_semantic01_0: RangeBlockCache::generate(
-                &RangeBlockColorSum::new(&data0, |byte| {
-                    (
-                        semantic01_color(byte).r() as u64,
-                        semantic01_color(byte).g() as u64,
-                        semantic01_color(byte).b() as u64,
-                    )
-                }),
+                &RangeBlockColorSum::new(&data0, semantic01_color_rgb),
                 data0.len(),
                 Self::SUB_BLOCK_SQRT,
             ),
             color_cache_semantic01_1: RangeBlockCache::generate(
-                &RangeBlockColorSum::new(&data1, |byte| {
-                    (
-                        semantic01_color(byte).r() as u64,
-                        semantic01_color(byte).g() as u64,
-                        semantic01_color(byte).b() as u64,
-                    )
-                }),
+                &RangeBlockColorSum::new(&data1, semantic01_color_rgb),
                 data1.len(),
                 Self::SUB_BLOCK_SQRT,
             ),
@@ -237,6 +213,7 @@ impl eframe::App for HexApp {
             .on_new_frame(ctx.input(|i| i.time), frame.info().cpu_usage);
 
         ctx.input(|i| {
+            // Handle files dropped into the window: load the file and update the caches.
             if let Some(dropped_file) = i.raw.dropped_files.first() {
                 if let Some(bytes) = &dropped_file.bytes {
                     match self.active_file {
@@ -250,24 +227,18 @@ impl eframe::App for HexApp {
                                 Self::SUB_BLOCK_SQRT,
                             );
                             self.color_cache_value0 = RangeBlockCache::generate(
-                                &RangeBlockColorSum::new(self.pattern0.as_ref().unwrap(), |byte| {
-                                    (
-                                        byte_color(byte).r() as u64,
-                                        byte_color(byte).g() as u64,
-                                        byte_color(byte).b() as u64,
-                                    )
-                                }),
+                                &RangeBlockColorSum::new(
+                                    self.pattern0.as_ref().unwrap(),
+                                    byte_color_rgb,
+                                ),
                                 self.pattern0.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );
                             self.color_cache_semantic01_0 = RangeBlockCache::generate(
-                                &RangeBlockColorSum::new(self.pattern0.as_ref().unwrap(), |byte| {
-                                    (
-                                        semantic01_color(byte).r() as u64,
-                                        semantic01_color(byte).g() as u64,
-                                        semantic01_color(byte).b() as u64,
-                                    )
-                                }),
+                                &RangeBlockColorSum::new(
+                                    self.pattern0.as_ref().unwrap(),
+                                    semantic01_color_rgb,
+                                ),
                                 self.pattern0.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );
@@ -282,24 +253,18 @@ impl eframe::App for HexApp {
                                 Self::SUB_BLOCK_SQRT,
                             );
                             self.color_cache_value1 = RangeBlockCache::generate(
-                                &RangeBlockColorSum::new(self.pattern1.as_ref().unwrap(), |byte| {
-                                    (
-                                        byte_color(byte).r() as u64,
-                                        byte_color(byte).g() as u64,
-                                        byte_color(byte).b() as u64,
-                                    )
-                                }),
+                                &RangeBlockColorSum::new(
+                                    self.pattern1.as_ref().unwrap(),
+                                    byte_color_rgb,
+                                ),
                                 self.pattern1.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );
                             self.color_cache_semantic01_1 = RangeBlockCache::generate(
-                                &RangeBlockColorSum::new(self.pattern1.as_ref().unwrap(), |byte| {
-                                    (
-                                        semantic01_color(byte).r() as u64,
-                                        semantic01_color(byte).g() as u64,
-                                        semantic01_color(byte).b() as u64,
-                                    )
-                                }),
+                                &RangeBlockColorSum::new(
+                                    self.pattern1.as_ref().unwrap(),
+                                    semantic01_color_rgb,
+                                ),
                                 self.pattern1.as_ref().unwrap().len(),
                                 Self::SUB_BLOCK_SQRT,
                             );
@@ -316,6 +281,7 @@ impl eframe::App for HexApp {
             }
         });
 
+        // UI config options window (opened via bottom bar button).
         Window::new("UI Config")
             .open(&mut self.ui_config_window)
             .show(ctx, |ui| {
@@ -343,6 +309,8 @@ impl eframe::App for HexApp {
                 ui.checkbox(&mut self.ui_config.cursor, "Cursor");
             });
 
+        // Info window for highlighted range block at the current visible recursion level.
+        // (may want to replace this entire concept)
         Window::new("Block info").show(ctx, |ui| {
             if let Some((index, count)) = self.selected_range_block {
                 ui.label(format!(

@@ -2,12 +2,14 @@ use std::collections::HashMap;
 
 use crate::range_blocks::CellCoords;
 
+/// A set of `Edge`s that represent the outer border of a set of range blocks.
 #[derive(Default)]
 pub struct RangeBorder {
     next_edge_id: usize,
     pub edges: Vec<Edge>,
 }
 
+/// An edge in the outer border of a set of range blocks.
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Edge {
     pub id: usize,
@@ -17,6 +19,7 @@ pub struct Edge {
 }
 
 impl RangeBorder {
+    /// Adds a clockwise-ordered rectangular set of 4 edges.
     pub fn add_rect(&mut self, top_left: CellCoords, bottom_right: CellCoords) {
         let top_right = CellCoords {
             x: bottom_right.x,
@@ -35,6 +38,8 @@ impl RangeBorder {
         self.next_edge_id += 4;
     }
 
+    /// Adds an edge, merging into any other applicable collinear edges.
+    /// This function is private because edges must be added in complete loops.
     fn add_edge(
         &mut self,
         mut id: usize,
@@ -77,6 +82,10 @@ impl RangeBorder {
     }
 }
 
+/// An 'iterator' over `LoopIter`s: there may be more than one LoopIter
+/// if the range border surrounds graphically non-contiguous range block groups.
+/// `Iterator` is not actually implemented here (because of lifetime issues)
+/// but it can be manually used like an iterator.
 pub struct LoopsIter {
     edges: HashMap<usize, Edge>,
 }
@@ -100,6 +109,7 @@ impl LoopsIter {
     }
 }
 
+/// An `Iterator` over `Edge`s in a range border loop.
 pub struct LoopIter<'a> {
     next_id: usize,
     edges: &'a mut HashMap<usize, Edge>,
@@ -127,6 +137,13 @@ impl Iterator for LoopIter<'_> {
     }
 }
 
+/// A convenience `Iterator` for anything that iterates over the entries of a loop.
+/// Each entry is returned paired with its successor in the loop order,
+/// and the final entry is returned with the first entry, completing the loop.
+///
+/// Intended for a `LoopIter` over a loop of `Edge`s: This allows easy access to
+/// adjacent pairs of edges for the rounded corners effect, which needs the two involved
+/// edges at the same time.
 pub struct LoopPairIter<I, T>
 where
     I: Iterator<Item = T>,

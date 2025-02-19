@@ -1,5 +1,6 @@
 use egui::Ui;
 
+/// Draws the info bar at the bottom of the window.
 pub fn info_bar(hex_app: &mut crate::hex_app::HexApp, ui: &mut Ui) {
     ui.horizontal(|ui| {
         ui.checkbox(&mut hex_app.dbg_flag, "dbg_flag");

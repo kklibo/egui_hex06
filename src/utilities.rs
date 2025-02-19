@@ -1,6 +1,8 @@
 use egui::Color32;
 use std::ops::Deref;
 
+/// Generate a representative color from `byte` by distributing its bits across
+/// the most significant bits of the color's RGB color values.
 pub fn byte_color(byte: u8) -> Color32 {
     let r = byte & 0b11000000;
     let g = (byte & 0b00111000) << 2;
@@ -9,6 +11,14 @@ pub fn byte_color(byte: u8) -> Color32 {
     Color32::from_rgb(r, g, b)
 }
 
+/// Same as `byte_color`, but outputs the RGB values as 3 u64s.
+pub fn byte_color_rgb(byte: u8) -> (u64, u64, u64) {
+    let c = byte_color(byte);
+    (c.r() as u64, c.g() as u64, c.b() as u64)
+}
+
+/// Guaranteed contrast to `color`: each color channel is rotated by 50%.
+/// (equivalent to flipping the most significant bit of each channel)
 pub fn contrast(color: Color32) -> Color32 {
     Color32::from_rgb(
         u8::wrapping_add(color.r(), 128),
@@ -17,6 +27,7 @@ pub fn contrast(color: Color32) -> Color32 {
     )
 }
 
+/// Generates a representative diff color.
 pub fn diff_color(diff_bytes: Option<usize>, count: u64) -> Color32 {
     if let Some(diff_bytes) = diff_bytes {
         if diff_bytes == 0 {
@@ -30,6 +41,7 @@ pub fn diff_color(diff_bytes: Option<usize>, count: u64) -> Color32 {
     }
 }
 
+/// (Experimental) Generates a representative color from `value`.
 pub fn semantic01_color(value: u8) -> Color32 {
     if value == 0 {
         Color32::DARK_GREEN
@@ -43,6 +55,15 @@ pub fn semantic01_color(value: u8) -> Color32 {
     }
 }
 
+/// Same as `semantic01_color`, but outputs the RGB values as 3 u64s.
+pub fn semantic01_color_rgb(value: u8) -> (u64, u64, u64) {
+    let c = semantic01_color(value);
+    (c.r() as u64, c.g() as u64, c.b() as u64)
+}
+
+/// Single-index diff test:
+/// If both bytes exist, returns Some(0) if identical or Some(1) if different.
+/// Otherwise, returns None.
 pub fn diff_at_index(
     data0: &Option<impl Deref<Target = [u8]>>,
     data1: &Option<impl Deref<Target = [u8]>>,
@@ -57,6 +78,7 @@ pub fn diff_at_index(
     None
 }
 
+/// A byte quantity and how to represent it as readable text.
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
 pub enum ByteString {
