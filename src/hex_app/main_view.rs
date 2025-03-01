@@ -276,8 +276,9 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 }
             };
 
+            // Use special partial rendering if this range block would be larger than
+            // the remaining extent of the file.
             if hex_app.ui_config.final_incomplete_block && index + count > data_len {
-                // Final incomplete range block
                 if let Some(count) = data_len.checked_sub(index) {
                     draw_range_boxes(
                         selection_range_blocks(index, count),
@@ -300,6 +301,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 continue;
             }
 
+            // Normal range block rendering
             draw_rounded_filled_box(top_left, bottom_right, fill_color);
 
             let diff_text = if let Some(diff_bytes) = diff_bytes {
@@ -308,6 +310,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
                 String::new()
             };
 
+            // Text overlay
             if rendered_recursion_level == 0 {
                 if hex_app.ui_config.cell_text {
                     let byte: u8 = data[usize::try_from(index).expect("temp fix")];
@@ -320,6 +323,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
+        // Draw outlines showing the range blocks at the next recursion level.
         if hex_app.ui_config.block_group_outline && rendered_recursion_level < max_recursion_level {
             for (index, count) in visible_range_blocks(rendered_recursion_level + 1) {
                 let (top_left, bottom_right) = range_block_corners(index, count, sub_block_sqrt);
@@ -327,6 +331,8 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
+        // Draw translucent boxes for range blocks containing the current selected index
+        // at every recursion level.
         if hex_app.ui_config.selected_subblock_boxes {
             if let Some(selected_index) = hex_app.selected_index {
                 let selected_index = selected_index as u64;
@@ -360,6 +366,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
+        // Draw a border around the range block containing the selected index.
         if hex_app.ui_config.selected_block {
             for (index, count) in visible_range_blocks(rendered_recursion_level) {
                 if let Some(selected_index) = hex_app.selected_index {
@@ -374,6 +381,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
             }
         }
 
+        // Draw current selected range (the data range visible in the hex view sidebar).
         if let Some(selected_index) = hex_app.selected_index {
             let count = u64::from(hex_app.hex_view_rows) * u64::from(hex_app.hex_view_columns);
 
@@ -405,6 +413,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
         }
     }
 
+    // Draw a square at the cursor position.
     if hex_app.ui_config.cursor {
         if let Some(cursor_pos) = response.hover_pos() {
             let rect = Rect::from_min_size(cursor_pos, Vec2::splat(10.0));
@@ -416,6 +425,7 @@ pub fn main_view(hex_app: &mut HexApp, _ctx: &Context, ui: &mut Ui) {
     ui.expand_to_include_rect(painter.clip_rect());
 }
 
+// Draw a border around a range of range blocks.
 fn draw_range_border(
     range_blocks: impl Iterator<Item = (u64, u64)>,
     sub_block_sqrt: u64,
@@ -438,6 +448,7 @@ fn draw_range_border(
     }
 }
 
+// Draw range blocks with a box-drawing function.
 fn draw_range_boxes(
     range_blocks: impl Iterator<Item = (u64, u64)>,
     sub_block_sqrt: u64,
@@ -449,6 +460,7 @@ fn draw_range_boxes(
     }
 }
 
+// Draw points at the corners of the border around a range of range blocks.
 fn draw_range_border_corners(
     range_blocks: impl Iterator<Item = (u64, u64)>,
     sub_block_sqrt: u64,
