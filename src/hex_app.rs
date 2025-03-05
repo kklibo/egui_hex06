@@ -137,8 +137,8 @@ impl HexApp {
         data1.extend(0..=u8::MAX);
 
         Self {
-            source_name0: None,
-            source_name1: None,
+            source_name0: Some("[random test data]".to_string()),
+            source_name1: Some("[random test data]".to_string()),
             cache0: RangeBlockCache::generate(
                 &RangeBlockSum::new(&data0),
                 data0.len(),

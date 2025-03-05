@@ -23,8 +23,28 @@ pub fn top_bar(hex_app: &mut HexApp, ctx: &egui::Context, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
         ui.heading("hex diff test (egui UI)");
         ui.separator();
-        ui.selectable_value(&mut hex_app.active_file, WhichFile::File0, "File0");
-        ui.selectable_value(&mut hex_app.active_file, WhichFile::File1, "File1");
+        ui.selectable_value(&mut hex_app.active_file, WhichFile::File0, "File0")
+            .on_hover_ui(|ui| {
+                ui.style_mut().interaction.selectable_labels = true;
+                ui.label(format!(
+                    "File0: {}",
+                    hex_app
+                        .source_name0
+                        .clone()
+                        .unwrap_or("[no file loaded]".to_string())
+                ));
+            });
+        ui.selectable_value(&mut hex_app.active_file, WhichFile::File1, "File1")
+            .on_hover_ui(|ui| {
+                ui.style_mut().interaction.selectable_labels = true;
+                ui.label(format!(
+                    "File1: {}",
+                    hex_app
+                        .source_name1
+                        .clone()
+                        .unwrap_or("[no file loaded]".to_string())
+                ));
+            });
         ui.separator();
         ui.label("zoom: ");
         ui.add(
